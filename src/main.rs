@@ -7,6 +7,7 @@ use crossterm::{
 use rusqlite::{params, Connection, Result as SqlResult};
 use std::{
     cell::RefCell,
+    collections::HashSet,
     error::Error,
     io,
     rc::Rc,
@@ -55,6 +56,8 @@ struct App {
     logs: Vec<String>,
     /// Scroll offset to be displayed.
     log_offset: usize,
+    /// Set task IDs that are expanded
+    expanded: HashSet<i32>,
 }
 
 impl App {
@@ -190,6 +193,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         input: String::new(),
         logs: Vec::new(),
         log_offset: 0,
+        expanded: HashSet::new(),
     };
     app.load_tasks()?; // load initial tasks
 
@@ -226,18 +230,24 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .tasks
                 .iter()
                 .map(|task| {
-                    let status = if task.completed { "[x]" } else { "[ ]" };
-                    // Create a multi-line item: first line with task info, second with timestamps.
-                    let lines = vec![
-                        Spans::from(Span::raw(format!(
-                            "{} {}: {}",
-                            status, task.id, task.description
-                        ))),
-                        Spans::from(Span::styled(
-                            format!("Created: {}  Updated: {}", task.created_at, task.updated_at),
-                            Style::default().fg(Color::Gray),
-                        )),
-                    ];
+                    // If task is expanded, show extra details; otherwise, only show the task name.
+                    let lines = if app.expanded.contains(&task.id) {
+                        vec![
+                            Spans::from(Span::raw(format!("{}", task.description))),
+                            Spans::from(Span::styled(
+                                format!(
+                                    "ID: {} | Completed: {} | Created: {} | Updated: {}",
+                                    task.id,
+                                    if task.completed { "Yes" } else { "No" },
+                                    task.created_at,
+                                    task.updated_at
+                                ),
+                                Style::default().fg(Color::Gray),
+                            )),
+                        ]
+                    } else {
+                        vec![Spans::from(Span::raw(format!("{}", task.description)))]
+                    };
                     ListItem::new(lines)
                 })
                 .collect();
@@ -354,6 +364,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                         KeyCode::Char('d') => {
                             if let Err(e) = app.delete_task() {
                                 eprintln!("Error deleting task: {:?}", e);
+                            }
+                        }
+                        KeyCode::Enter => {
+                            // Toggle expansion of the selected task.
+                            if let Some(task) = app.tasks.get(app.selected) {
+                                if app.expanded.contains(&task.id) {
+                                    app.expanded.remove(&task.id);
+                                } else {
+                                    app.expanded.insert(task.id);
+                                }
                             }
                         }
                         KeyCode::Down | KeyCode::Char('j') => {
