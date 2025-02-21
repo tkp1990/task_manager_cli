@@ -29,6 +29,7 @@ pub enum InputMode {
     AddingTask,
     EditingTask,
     AddingTopic,
+    Help,
     //EditingTopic,
 }
 
@@ -55,6 +56,8 @@ pub struct App {
     pub log_offset: usize,
     /// Set task IDs that are expanded
     pub expanded: HashSet<i32>,
+    /// Flag for the help window
+    pub show_help: bool,
 }
 
 impl App {
@@ -97,6 +100,7 @@ impl App {
             logs: Vec::new(),
             log_offset: 0,
             expanded: HashSet::new(),
+            show_help: false,
         };
         app.load_topics()?;
         // Ensure Favourites topic exists.

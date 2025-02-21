@@ -49,16 +49,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 app.input.clear();
                             }
                         }
-                        KeyCode::Char('e') => {
-                            app.input_mode = InputMode::EditingTask;
-                            app.input.clear();
-                        }
-                        KeyCode::Char('t') => {
-                            if let Err(e) = app.toggle_task() {
-                                eprintln!("Error toggling task: {:?}", e);
-                                app.add_log("ERROR", "Failed to toggle task");
-                            }
-                        }
                         // Delete the selected task
                         KeyCode::Char('d') => {
                             if let Err(e) = app.delete_task() {
@@ -66,11 +56,26 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 app.add_log("ERROR", "Failed to delete task");
                             }
                         }
+                        KeyCode::Char('e') => {
+                            app.input_mode = InputMode::EditingTask;
+                            app.input.clear();
+                        }
                         // Toggle favourite flag for selected task
                         KeyCode::Char('f') => {
                             if let Err(e) = app.toggle_favourite() {
                                 eprintln!("Error toggling favourite: {:?}", e);
                                 app.add_log("ERROR", "Failed to toggle favourite");
+                            }
+                        }
+                        // Toggle Help popup
+                        KeyCode::Char('H') => {
+                            app.input_mode = InputMode::Help;
+                            app.show_help = !app.show_help;
+                        }
+                        KeyCode::Char('t') => {
+                            if let Err(e) = app.toggle_task() {
+                                eprintln!("Error toggling task: {:?}", e);
+                                app.add_log("ERROR", "Failed to toggle task");
                             }
                         }
                         KeyCode::Enter => {
@@ -201,6 +206,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                         }
                         KeyCode::Backspace => {
                             app.input.pop();
+                        }
+                        _ => {}
+                    },
+                    InputMode::Help => match key.code {
+                        KeyCode::Esc => {
+                            app.show_help = false;
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Char('H') => {
+                            app.show_help = false;
+                            app.input_mode = InputMode::Normal;
                         }
                         _ => {}
                     },
