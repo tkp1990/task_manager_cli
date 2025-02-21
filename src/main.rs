@@ -42,21 +42,35 @@ fn main() -> Result<(), Box<dyn Error>> {
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => break,
                         KeyCode::Char('a') => {
-                            app.input_mode = InputMode::Adding;
-                            app.input.clear();
+                            if app.current_topic_is_favourites() {
+                                // You may show a log message if desired.
+                            } else {
+                                app.input_mode = InputMode::AddingTask;
+                                app.input.clear();
+                            }
                         }
                         KeyCode::Char('e') => {
-                            app.input_mode = InputMode::Editing;
+                            app.input_mode = InputMode::EditingTask;
                             app.input.clear();
                         }
                         KeyCode::Char('t') => {
                             if let Err(e) = app.toggle_task() {
                                 eprintln!("Error toggling task: {:?}", e);
+                                app.add_log("ERROR", "Failed to toggle task");
                             }
                         }
+                        // Delete the selected task
                         KeyCode::Char('d') => {
                             if let Err(e) = app.delete_task() {
                                 eprintln!("Error deleting task: {:?}", e);
+                                app.add_log("ERROR", "Failed to delete task");
+                            }
+                        }
+                        // Toggle favourite flag for selected task
+                        KeyCode::Char('f') => {
+                            if let Err(e) = app.toggle_favourite() {
+                                eprintln!("Error toggling favourite: {:?}", e);
+                                app.add_log("ERROR", "Failed to toggle favourite");
                             }
                         }
                         KeyCode::Enter => {
@@ -79,6 +93,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 app.selected -= 1;
                             }
                         }
+                        // Switch topic to the left
+                        KeyCode::Left | KeyCode::Char('h') => {
+                            if app.selected_topic > 0 {
+                                app.selected_topic -= 1;
+                                app.load_tasks().unwrap();
+                                app.selected = 0;
+                            }
+                        }
+                        // Switch topic to the right
+                        KeyCode::Right | KeyCode::Char('l') => {
+                            if app.selected_topic < app.topics.len().saturating_sub(1) {
+                                app.selected_topic += 1;
+                                app.load_tasks().unwrap();
+                                app.selected = 0;
+                            }
+                        }
                         KeyCode::PageUp => {
                             app.log_offset += 1;
                         }
@@ -87,15 +117,31 @@ fn main() -> Result<(), Box<dyn Error>> {
                                 app.log_offset -= 1;
                             }
                         }
+                        // Add a new topic
+                        KeyCode::Char('N') => {
+                            app.input_mode = InputMode::AddingTopic;
+                            app.input.clear();
+                        }
+                        // Delete current topic (except Favourites)
+                        KeyCode::Char('X') => {
+                            if !app.current_topic_is_favourites() {
+                                if let Err(e) = app.delete_topic() {
+                                    eprintln!("Error deleting topic: {:?}", e);
+                                    app.add_log("ERROR", "Failed to delete topic");
+                                }
+                            }
+                        }
                         _ => {}
                     },
-                    InputMode::Adding => match key.code {
+                    InputMode::AddingTask => match key.code {
                         KeyCode::Enter => {
                             // Add the task and switch back to normal mode.
                             if !app.input.is_empty() {
                                 let input_clone = app.input.clone();
                                 if let Err(e) = app.add_task(&input_clone) {
                                     eprintln!("Error adding task: {:?}", e);
+                                    app.add_log("ERROR", "Failed to add task");
+                                    app.add_log("ERROR", &format!("{:?}", e));
                                 }
                             }
                             app.input_mode = InputMode::Normal;
@@ -111,13 +157,38 @@ fn main() -> Result<(), Box<dyn Error>> {
                         }
                         _ => {}
                     },
-                    InputMode::Editing => match key.code {
+                    InputMode::EditingTask => match key.code {
                         KeyCode::Enter => {
                             // Add the task and switch back to normal mode.
                             if !app.input.is_empty() {
                                 let input_clone = app.input.clone();
                                 if let Err(e) = app.edit_task(&input_clone) {
                                     eprintln!("Error editing task: {:?}", e);
+                                    app.add_log("ERROR", "Failed to edit task");
+                                }
+                            }
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Char(c) => {
+                            app.input.push(c);
+                        }
+                        KeyCode::Backspace => {
+                            app.input.pop();
+                        }
+                        _ => {}
+                    },
+                    InputMode::AddingTopic => match key.code {
+                        KeyCode::Enter => {
+                            if !app.input.is_empty() {
+                                let input_clone = app.input.clone();
+                                if let Err(e) = app.add_topic(&input_clone) {
+                                    eprintln!("Error adding topic: {:?}", e);
+                                    app.add_log("ERROR", "Failed to add topic");
+                                } else {
+                                    app.add_log("INFO", &format!("Added topic: {}", app.input));
                                 }
                             }
                             app.input_mode = InputMode::Normal;
