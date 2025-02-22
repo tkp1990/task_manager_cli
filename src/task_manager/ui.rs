@@ -385,27 +385,243 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     // --- HELP POPUP (if enabled) ---
     if app.show_help {
         let help_text = vec![
-            Spans::from(Span::styled("Help - Available Operations", Style::default().add_modifier(Modifier::BOLD))),
+            Spans::from(Span::styled(
+                "Help - Available Operations",
+                Style::default()
+                    .fg(Color::LightBlue)
+                    .add_modifier(Modifier::BOLD),
+            )),
             Spans::from(""),
-            Spans::from(Span::raw("Add Task: Press 'a' to add a new task (in a non-Favourites topic). Type the description and press Enter.")),
-            Spans::from(Span::raw("Add Task: Press 'e' to edit a task. Edit the description and press Enter.")),
-            Spans::from(Span::raw("Toggle Complete: Press 't' to mark a task complete/incomplete.")),
-            Spans::from(Span::raw("Toggle Favourite: Press 'f' to mark/unmark a task as favourite.")),
-            Spans::from(Span::raw("Delete Task: Press 'd' to delete the selected task.")),
-            Spans::from(Span::raw("Expand/Collapse Task: Press Enter on a task to show/hide details.")),
-            Spans::from(Span::raw("Navigating Tasks: Use Up/Down arrow keys or j/k to change topics.")),
-            Spans::from(Span::raw("Switch Topics: Use Left/Right arrow keys or h/l to change topics.")),
-            Spans::from(Span::raw("Add Topic: Press 'N' to add a new topic. Then enter the topic name and press Enter.")),
-            Spans::from(Span::raw("Delete Topic: Press 'X' to delete the current topic (Favourites is protected).")),
-            Spans::from(Span::raw("Scroll Logs: Use PageUp/PageDown to scroll through logs.")),
-            Spans::from(Span::raw("Toggle Help: Press 'H' to hide this help window.")),
-            Spans::from(Span::raw("Quit: Press 'q' to exit the application.")),
+            Spans::from(vec![
+                Span::styled(
+                    "Add Task:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'a'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to add a new task (in a non-Favourites topic)."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Edit Task:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'e'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to edit an existing task."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Toggle Complete:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'t'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to mark a task complete/incomplete."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Toggle Favourite:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'f'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to mark/unmark as favourite."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Delete Task:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'d'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to delete the selected task."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Expand/Collapse Task:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "Enter",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to toggle details."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Navigate Tasks:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Use "),
+                Span::styled(
+                    "Up/Down",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" arrow keys or "),
+                Span::styled(
+                    "j/k",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to move."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Switch Topics:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Use "),
+                Span::styled(
+                    "Left/Right",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" arrow keys or "),
+                Span::styled(
+                    "h/l",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to change topics."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Add Topic:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'N'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to add a new topic."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Delete Topic:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'X'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to delete the current topic (Favourites is protected)."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Scroll Logs:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Use "),
+                Span::styled(
+                    "PageUp/PageDown",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to scroll logs."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Toggle Help:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "Ctrl+h",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to hide help."),
+            ]),
+            Spans::from(vec![
+                Span::styled(
+                    "Quit:",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" Press "),
+                Span::styled(
+                    "'q'",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" to exit."),
+            ]),
         ];
+
         let help_paragraph = Paragraph::new(help_text)
             .block(Block::default().borders(Borders::ALL).title("Help"))
+            .style(Style::default().fg(Color::White).bg(Color::Black))
             .wrap(tui::widgets::Wrap { trim: true });
         let area = centered_rect(60, 70, size);
-        // Clear the background behind the popup
+        // Clear the background behind the popup before rendering help
         f.render_widget(Clear, area);
         f.render_widget(help_paragraph, area);
     }
