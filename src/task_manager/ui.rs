@@ -288,10 +288,19 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .tasks
         .iter()
         .map(|task| {
+            // Determine the text style based on completion status.
+            let description_style = if task.completed {
+                Style::default().fg(Color::Green)
+            } else {
+                Style::default().fg(Color::Cyan)
+            };
             // If task is expanded, show extra details; otherwise, only show the task name.
             let lines = if app.expanded.contains(&task.id) {
                 vec![
-                    Spans::from(Span::raw(format!("{}", task.description))),
+                    Spans::from(Span::styled(
+                        format!("{}", task.description),
+                        description_style,
+                    )),
                     Spans::from(Span::styled(
                         format!(
                             "ID: {} | Completed: {} | Favourite: {} | Created: {} | Updated: {}",
@@ -305,7 +314,10 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                     )),
                 ]
             } else {
-                vec![Spans::from(Span::raw(format!("{}", task.description)))]
+                vec![Spans::from(Span::styled(
+                    format!("{}", task.description),
+                    description_style,
+                ))]
             };
             ListItem::new(lines)
         })
