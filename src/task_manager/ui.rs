@@ -7,7 +7,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 
@@ -319,7 +319,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
         )
-        .highlight_symbol(">> ");
+        .highlight_symbol("=> ");
 
     let mut list_state = ListState::default();
     list_state.select(Some(app.selected));
@@ -384,245 +384,81 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     // --- HELP POPUP (if enabled) ---
     if app.show_help {
-        let help_text = vec![
-            Spans::from(Span::styled(
-                "Help - Available Operations",
-                Style::default()
-                    .fg(Color::LightBlue)
-                    .add_modifier(Modifier::BOLD),
-            )),
-            Spans::from(""),
-            Spans::from(vec![
-                Span::styled(
-                    "Add Task:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'a'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to add a new task (in a non-Favourites topic)."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Edit Task:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'e'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to edit an existing task."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Toggle Complete:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'t'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to mark a task complete/incomplete."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Toggle Favourite:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'f'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to mark/unmark as favourite."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Delete Task:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'d'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to delete the selected task."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Expand/Collapse Task:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "Enter",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to toggle details."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Navigate Tasks:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Use "),
-                Span::styled(
-                    "Up/Down",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" arrow keys or "),
-                Span::styled(
-                    "j/k",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to move."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Switch Topics:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Use "),
-                Span::styled(
-                    "Left/Right",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" arrow keys or "),
-                Span::styled(
-                    "h/l",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to change topics."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Add Topic:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'N'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to add a new topic."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Delete Topic:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'X'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to delete the current topic (Favourites is protected)."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Scroll Logs:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Use "),
-                Span::styled(
-                    "PageUp/PageDown",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to scroll logs."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Toggle Help:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "Ctrl+h",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to hide help."),
-            ]),
-            Spans::from(vec![
-                Span::styled(
-                    "Quit:",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" Press "),
-                Span::styled(
-                    "'q'",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::raw(" to exit."),
-            ]),
-        ];
-
+        let help_text = get_help_text();
         let help_paragraph = Paragraph::new(help_text)
             .block(Block::default().borders(Borders::ALL).title("Help"))
             .style(Style::default().fg(Color::White).bg(Color::Black))
-            .wrap(tui::widgets::Wrap { trim: true });
+            .wrap(Wrap { trim: true });
         let area = centered_rect(60, 70, size);
         // Clear the background behind the popup before rendering help
         f.render_widget(Clear, area);
         f.render_widget(help_paragraph, area);
     }
+}
+
+/// Build a single help line with a title, key command, and description.
+fn build_help_line(
+    title: &'static str,
+    key: &'static str,
+    description: &'static str,
+) -> Spans<'static> {
+    Spans::from(vec![
+        Span::styled(
+            title,
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::raw(" Press "),
+        Span::styled(
+            key,
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::raw(" "),
+        Span::raw(description),
+    ])
+}
+
+/// Returns the help text as a vector of Spans.
+pub fn get_help_text() -> Vec<Spans<'static>> {
+    vec![
+        Spans::from(Span::styled(
+            "Help - Available Operations",
+            Style::default()
+                .fg(Color::LightBlue)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Spans::from(""),
+        build_help_line(
+            "Add Task:",
+            "'a'",
+            "to add a new task (in a non-Favourites topic).",
+        ),
+        build_help_line("Edit Task:", "'e'", "to edit an existing task."),
+        build_help_line(
+            "Toggle Complete:",
+            "'t'",
+            "to mark a task complete/incomplete.",
+        ),
+        build_help_line("Toggle Favourite:", "'f'", "to mark/unmark as favourite."),
+        build_help_line("Delete Task:", "'d'", "to delete the selected task."),
+        build_help_line("Expand/Collapse Task:", "Enter", "to toggle details."),
+        build_help_line(
+            "Navigate Tasks:",
+            "Up/Down or j/k",
+            "to move between tasks.",
+        ),
+        build_help_line("Switch Topics:", "Left/Right or h/l", "to change topics."),
+        build_help_line("Add Topic:", "'N'", "to add a new topic."),
+        build_help_line(
+            "Delete Topic:",
+            "'X'",
+            "to delete the current topic (Favourites is protected).",
+        ),
+        build_help_line("Scroll Logs:", "PageUp/PageDown", "to scroll logs."),
+        build_help_line("Toggle Help:", "Ctrl+h", "to hide help."),
+        build_help_line("Quit:", "'q'", "to exit the application."),
+    ]
 }
