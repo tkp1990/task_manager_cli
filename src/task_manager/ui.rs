@@ -462,91 +462,94 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     if app.input_mode == InputMode::AddingTaskName
         || app.input_mode == InputMode::AddingTaskDescription
     {
-        // Create a popup for task creation
-        let popup_area = centered_rect(60, 40, size);
-        f.render_widget(Clear, popup_area); // Clear the area first
+        draw_add_task_popup(f, app);
+    }
+}
 
-        // Split the popup into different sections
-        let popup_layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(3), // Title
-                Constraint::Length(3), // Name field
-                Constraint::Length(1), // Spacer
-                Constraint::Min(5),    // Description field
-                Constraint::Length(3), // Instructions
-            ])
-            .split(popup_area);
+fn draw_add_task_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    // Create a popup for task creation
+    let size = f.size();
+    let popup_area = centered_rect(60, 40, size);
+    f.render_widget(Clear, popup_area); // Clear the area first
 
-        // Popup title
-        let popup_title = Paragraph::new("Create New Task")
-            .style(
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            )
-            .block(Block::default().borders(Borders::ALL));
-        f.render_widget(popup_title, popup_layout[0]);
+    // Split the popup into different sections
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Title
+            Constraint::Length(3), // Name field
+            Constraint::Length(1), // Spacer
+            Constraint::Min(5),    // Description field
+            Constraint::Length(3), // Instructions
+        ])
+        .split(popup_area);
 
-        // Name field
-        let name_input_style = if app.input_mode == InputMode::AddingTaskName {
-            Style::default().fg(Color::Yellow)
-        } else {
-            Style::default().fg(Color::Gray)
-        };
+    // Popup title
+    let popup_title = Paragraph::new("Create New Task")
+        .style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(popup_title, popup_layout[0]);
 
-        let name_input = Paragraph::new(app.task_name_input.as_ref())
-            .style(name_input_style)
-            .block(Block::default().borders(Borders::ALL).title("Task Name"));
-        f.render_widget(name_input, popup_layout[1]);
+    // Name field
+    let name_input_style = if app.input_mode == InputMode::AddingTaskName {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default().fg(Color::Gray)
+    };
 
-        // Description field
-        let desc_input_style = if app.input_mode == InputMode::AddingTaskDescription {
-            Style::default().fg(Color::Yellow)
-        } else {
-            Style::default().fg(Color::Gray)
-        };
+    let name_input = Paragraph::new(app.task_name_input.as_ref())
+        .style(name_input_style)
+        .block(Block::default().borders(Borders::ALL).title("Task Name"));
+    f.render_widget(name_input, popup_layout[1]);
 
-        let desc_input = Paragraph::new(app.task_description_input.as_ref())
-            .style(desc_input_style)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title("Task Description"),
-            )
-            .wrap(Wrap { trim: true });
-        f.render_widget(desc_input, popup_layout[3]);
+    // Description field
+    let desc_input_style = if app.input_mode == InputMode::AddingTaskDescription {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default().fg(Color::Gray)
+    };
 
-        // Instructions
-        let instructions = match app.input_mode {
-            InputMode::AddingTaskName => {
-                "Enter task name and press Enter to continue. (Esc to cancel)"
-            }
-            InputMode::AddingTaskDescription => {
-                "Enter task description and press Enter to save. (Tab to edit name, Esc to cancel)"
-            }
-            _ => "",
-        };
+    let desc_input = Paragraph::new(app.task_description_input.as_ref())
+        .style(desc_input_style)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("Task Description"),
+        )
+        .wrap(Wrap { trim: true });
+    f.render_widget(desc_input, popup_layout[3]);
 
-        let instructions_text = Paragraph::new(instructions)
-            .style(Style::default().fg(Color::White))
-            .block(Block::default().borders(Borders::ALL));
-        f.render_widget(instructions_text, popup_layout[4]);
-
-        // Set cursor position based on input mode
-        if app.input_mode == InputMode::AddingTaskName {
-            // Set cursor to end of name input
-            f.set_cursor(
-                popup_layout[1].x + app.task_name_input.len() as u16 + 1,
-                popup_layout[1].y + 1,
-            );
-        } else if app.input_mode == InputMode::AddingTaskDescription {
-            // Set cursor to end of description input (note: doesn't handle wrapping)
-            f.set_cursor(
-                popup_layout[3].x + app.task_description_input.len() as u16 + 1,
-                popup_layout[3].y + 1,
-            );
+    // Instructions
+    let instructions = match app.input_mode {
+        InputMode::AddingTaskName => "Enter task name and press Enter to continue. (Esc to cancel)",
+        InputMode::AddingTaskDescription => {
+            "Enter task description and press Enter to save. (Tab to edit name, Esc to cancel)"
         }
+        _ => "",
+    };
+
+    let instructions_text = Paragraph::new(instructions)
+        .style(Style::default().fg(Color::White))
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(instructions_text, popup_layout[4]);
+
+    // Set cursor position based on input mode
+    if app.input_mode == InputMode::AddingTaskName {
+        // Set cursor to end of name input
+        f.set_cursor(
+            popup_layout[1].x + app.task_name_input.len() as u16 + 1,
+            popup_layout[1].y + 1,
+        );
+    } else if app.input_mode == InputMode::AddingTaskDescription {
+        // Set cursor to end of description input (note: doesn't handle wrapping)
+        f.set_cursor(
+            popup_layout[3].x + app.task_description_input.len() as u16 + 1,
+            popup_layout[3].y + 1,
+        );
     }
 }
 
