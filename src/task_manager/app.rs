@@ -15,6 +15,7 @@ pub struct Topic {
 pub struct Task {
     pub id: i32,
     pub topic_id: i32,
+    pub name: String,
     pub description: String,
     pub completed: bool,
     pub favourite: bool,
@@ -27,6 +28,8 @@ pub struct Task {
 pub enum InputMode {
     Normal,
     AddingTask,
+    AddingTaskName,
+    AddingTaskDescription,
     EditingTask,
     AddingTopic,
     Help,
@@ -50,6 +53,10 @@ pub struct App {
     pub input_mode: InputMode,
     /// Buffer for new task input.
     pub input: String,
+    /// Buffer for task name (when creating a new task)
+    pub task_name_input: String,
+    /// Buffer for task description (when creating a new task)
+    pub task_description_input: String,
     /// Log storage.
     pub logs: Vec<String>,
     /// Scroll offset to be displayed.
@@ -80,6 +87,7 @@ impl App {
             "CREATE TABLE IF NOT EXISTS task (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 topic_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
                 description TEXT NOT NULL,
                 completed BOOLEAN NOT NULL DEFAULT 0,
                 favourite BOOLEAN NOT NULL DEFAULT 0,
@@ -97,6 +105,8 @@ impl App {
             selected_topic: 0,
             input_mode: InputMode::Normal,
             input: String::new(),
+            task_name_input: String::new(),
+            task_description_input: String::new(),
             logs: Vec::new(),
             log_offset: 0,
             expanded: HashSet::new(),
@@ -133,9 +143,9 @@ impl App {
         }
         let current_topic = &self.topics[self.selected_topic];
         let mut stmt = if current_topic.name == "Favourites" {
-            conn.prepare("SELECT id, topic_id, description, completed, favourite, created_at, updated_at FROM task WHERE favourite = 1 ORDER BY id")?
+            conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task WHERE favourite = 1 ORDER BY id")?
         } else {
-            conn.prepare("SELECT id, topic_id, description, completed, favourite, created_at, updated_at FROM task WHERE topic_id = ?1 ORDER BY id")?
+            conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task WHERE topic_id = ?1 ORDER BY id")?
         };
 
         let params: &[&dyn ToSql] = if current_topic.name == "Favourites" {
@@ -148,11 +158,12 @@ impl App {
             Ok(Task {
                 id: row.get(0)?,
                 topic_id: row.get(1)?,
-                description: row.get(2)?,
-                completed: row.get(3)?,
-                favourite: row.get(4)?,
-                created_at: row.get(5)?,
-                updated_at: row.get(6)?,
+                name: row.get(2)?,
+                description: row.get(3)?,
+                completed: row.get(4)?,
+                favourite: row.get(5)?,
+                created_at: row.get(6)?,
+                updated_at: row.get(7)?,
             })
         })?;
 
@@ -193,6 +204,26 @@ impl App {
         self.logs.push(entry);
         // Reset scroll so that the latest logs are visible.
         self.log_offset = 0;
+    }
+
+    /// Add a new task to the database with both name and description.
+    pub fn add_task_with_details(&mut self, name: &str, desc: &str) -> SqlResult<()> {
+        let current_topic = &self.topics[self.selected_topic];
+        if current_topic.name == "Favourites" {
+            // Cannot add tasks directly to Favourites.
+            return Ok(());
+        }
+        let now = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        {
+            // Borrow the connection in its own scope.
+            let conn = self.conn.borrow();
+            conn.execute(
+                "INSERT INTO task (topic_id, name, description, created_at, updated_at, completed) VALUES (?1, ?2, ?3, ?4, ?5, 0)",
+                params![current_topic.id, name, desc, now, now],
+            )?;
+        } // conn borrow is dropped here.
+        self.add_log("INFO", &format!("Added task: {} - {}", name, desc));
+        self.load_tasks()
     }
 
     /// Add a new task to the database.
@@ -327,5 +358,11 @@ impl App {
         } else {
             self.topics[self.selected_topic].name == "Favourites"
         }
+    }
+
+    // Reset task input fields
+    pub fn reset_task_inputs(&mut self) {
+        self.task_name_input.clear();
+        self.task_description_input.clear();
     }
 }

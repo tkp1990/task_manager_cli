@@ -64,7 +64,7 @@ pub fn run<B: Backend>(
                             if app.current_topic_is_favourites() {
                                 // You may show a log message if desired.
                             } else {
-                                app.input_mode = InputMode::AddingTask;
+                                app.input_mode = InputMode::AddingTaskName;
                                 app.input.clear();
                             }
                         }
@@ -178,6 +178,55 @@ pub fn run<B: Backend>(
                         }
                         KeyCode::Backspace => {
                             app.input.pop();
+                        }
+                        _ => {}
+                    },
+                    InputMode::AddingTaskName => match key.code {
+                        KeyCode::Enter => {
+                            if !app.task_name_input.is_empty() {
+                                // Move to description input
+                                app.input_mode = InputMode::AddingTaskDescription;
+                            }
+                        }
+                        KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Char(c) => {
+                            app.task_name_input.push(c);
+                        }
+                        KeyCode::Backspace => {
+                            app.task_name_input.pop();
+                        }
+                        _ => {}
+                    },
+                    InputMode::AddingTaskDescription => match key.code {
+                        KeyCode::Enter => {
+                            if !app.task_name_input.is_empty() {
+                                // Save the task with name and description
+                                let name_clone = app.task_name_input.clone();
+                                let desc_clone = app.task_description_input.clone();
+                                if let Err(e) = app.add_task_with_details(&name_clone, &desc_clone)
+                                {
+                                    eprintln!("Error adding task: {:?}", e);
+                                    app.add_log("ERROR", "Failed to add task");
+                                    app.add_log("ERROR", &format!("{:?}", e));
+                                }
+                                app.reset_task_inputs();
+                                app.input_mode = InputMode::Normal;
+                            }
+                        }
+                        KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Tab => {
+                            // Let Tab key switch back to name field
+                            app.input_mode = InputMode::AddingTaskName;
+                        }
+                        KeyCode::Char(c) => {
+                            app.task_description_input.push(c);
+                        }
+                        KeyCode::Backspace => {
+                            app.task_description_input.pop();
                         }
                         _ => {}
                     },
@@ -357,6 +406,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             Span::raw("Edit task description (Press Enter to save, Esc to cancel): "),
             Span::raw(&app.input),
         ]),
+        InputMode::AddingTaskName | InputMode::AddingTaskDescription => help_hint,
         _ => help_hint,
     };
     let help_message = Paragraph::new(input_msg)
@@ -368,6 +418,8 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let mode_text = match app.input_mode {
         InputMode::Normal => "Normal Mode",
         InputMode::AddingTask => "Add Mode",
+        InputMode::AddingTaskName => "Adding Task - Name Input",
+        InputMode::AddingTaskDescription => "Adding Task - Description Input",
         InputMode::EditingTask => "Editing Mode",
         InputMode::AddingTopic => "Adding Topic",
         InputMode::Help => "Viewing Help",
@@ -405,6 +457,96 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         // Clear the background behind the popup before rendering help
         f.render_widget(Clear, area);
         f.render_widget(help_paragraph, area);
+    }
+
+    if app.input_mode == InputMode::AddingTaskName
+        || app.input_mode == InputMode::AddingTaskDescription
+    {
+        // Create a popup for task creation
+        let popup_area = centered_rect(60, 40, size);
+        f.render_widget(Clear, popup_area); // Clear the area first
+
+        // Split the popup into different sections
+        let popup_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3), // Title
+                Constraint::Length(3), // Name field
+                Constraint::Length(1), // Spacer
+                Constraint::Min(5),    // Description field
+                Constraint::Length(3), // Instructions
+            ])
+            .split(popup_area);
+
+        // Popup title
+        let popup_title = Paragraph::new("Create New Task")
+            .style(
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
+            )
+            .block(Block::default().borders(Borders::ALL));
+        f.render_widget(popup_title, popup_layout[0]);
+
+        // Name field
+        let name_input_style = if app.input_mode == InputMode::AddingTaskName {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default().fg(Color::Gray)
+        };
+
+        let name_input = Paragraph::new(app.task_name_input.as_ref())
+            .style(name_input_style)
+            .block(Block::default().borders(Borders::ALL).title("Task Name"));
+        f.render_widget(name_input, popup_layout[1]);
+
+        // Description field
+        let desc_input_style = if app.input_mode == InputMode::AddingTaskDescription {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default().fg(Color::Gray)
+        };
+
+        let desc_input = Paragraph::new(app.task_description_input.as_ref())
+            .style(desc_input_style)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Task Description"),
+            )
+            .wrap(Wrap { trim: true });
+        f.render_widget(desc_input, popup_layout[3]);
+
+        // Instructions
+        let instructions = match app.input_mode {
+            InputMode::AddingTaskName => {
+                "Enter task name and press Enter to continue. (Esc to cancel)"
+            }
+            InputMode::AddingTaskDescription => {
+                "Enter task description and press Enter to save. (Tab to edit name, Esc to cancel)"
+            }
+            _ => "",
+        };
+
+        let instructions_text = Paragraph::new(instructions)
+            .style(Style::default().fg(Color::White))
+            .block(Block::default().borders(Borders::ALL));
+        f.render_widget(instructions_text, popup_layout[4]);
+
+        // Set cursor position based on input mode
+        if app.input_mode == InputMode::AddingTaskName {
+            // Set cursor to end of name input
+            f.set_cursor(
+                popup_layout[1].x + app.task_name_input.len() as u16 + 1,
+                popup_layout[1].y + 1,
+            );
+        } else if app.input_mode == InputMode::AddingTaskDescription {
+            // Set cursor to end of description input (note: doesn't handle wrapping)
+            f.set_cursor(
+                popup_layout[3].x + app.task_description_input.len() as u16 + 1,
+                popup_layout[3].y + 1,
+            );
+        }
     }
 }
 
@@ -446,7 +588,7 @@ pub fn get_help_text() -> Vec<Spans<'static>> {
         build_help_line(
             "Add Task:",
             "'a'",
-            "to add a new task (in a non-Favourites topic).",
+            "opens a popup to create a new task with name and description.",
         ),
         build_help_line("Edit Task:", "'e'", "to edit an existing task."),
         build_help_line(
