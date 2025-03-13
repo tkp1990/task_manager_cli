@@ -70,10 +70,7 @@ pub fn run<B: Backend>(
                         }
                         // Delete the selected task
                         KeyCode::Char('d') => {
-                            if let Err(e) = app.delete_task() {
-                                eprintln!("Error deleting task: {:?}", e);
-                                app.add_log("ERROR", "Failed to delete task");
-                            }
+                            app.input_mode = InputMode::DeleteTask;
                         }
                         KeyCode::Char('e') => {
                             app.input_mode = InputMode::EditingTask;
@@ -253,6 +250,19 @@ pub fn run<B: Backend>(
                         }
                         _ => {}
                     },
+                    InputMode::DeleteTask => match key.code {
+                        KeyCode::Char('y') => {
+                            if let Err(e) = app.delete_task() {
+                                eprintln!("Error deleting task: {:?}", e);
+                                app.add_log("ERROR", "Failed to delete task");
+                            }
+                            app.input_mode = InputMode::Normal;
+                        }
+                        KeyCode::Char('n') | KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        _ => {}
+                    },
                     InputMode::AddingTopic => match key.code {
                         KeyCode::Enter => {
                             if !app.input.is_empty() {
@@ -422,6 +432,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         InputMode::AddingTaskName => "Adding Task - Name Input",
         InputMode::AddingTaskDescription => "Adding Task - Description Input",
         InputMode::EditingTask => "Editing Mode",
+        InputMode::DeleteTask => "Delete Task",
         InputMode::AddingTopic => "Adding Topic",
         InputMode::Help => "Viewing Help",
     };
@@ -464,6 +475,10 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         || app.input_mode == InputMode::AddingTaskDescription
     {
         draw_add_task_popup(f, app);
+    }
+
+    if app.input_mode == InputMode::DeleteTask {
+        draw_delete_popup(f, app);
     }
 }
 
@@ -552,6 +567,57 @@ fn draw_add_task_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             popup_layout[3].y + 1,
         );
     }
+}
+
+fn draw_delete_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    // Create a nicely sized popup for task deletion confirmation
+    let size = f.size();
+    let delete_popup_area = centered_rect(50, 20, size);
+    f.render_widget(Clear, delete_popup_area); // Clear the area first
+
+    // Split the popup into sections
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Title
+            Constraint::Length(3), // Message
+            Constraint::Length(3), // Instructions
+        ])
+        .split(delete_popup_area);
+
+    // Popup title
+    let popup_title = Paragraph::new("Delete Confirmation")
+        .style(
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .alignment(tui::layout::Alignment::Center)
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(popup_title, popup_layout[0]);
+
+    // Task details to be deleted
+    let task_name = if let Some(task) = app.tasks.get(app.selected) {
+        &task.name
+    } else {
+        "Unknown Task"
+    };
+
+    let delete_message = Paragraph::new(format!(
+        "Are you sure you want to delete \"{}\"?",
+        task_name
+    ))
+    .style(Style::default().fg(Color::Red))
+    .alignment(tui::layout::Alignment::Center)
+    .block(Block::default().borders(Borders::ALL));
+    f.render_widget(delete_message, popup_layout[1]);
+
+    // Instructions
+    let instructions = Paragraph::new("Press [Y] to confirm deletion or [N] to cancel")
+        .style(Style::default().fg(Color::Cyan))
+        .alignment(tui::layout::Alignment::Center)
+        .block(Block::default().borders(Borders::ALL));
+    f.render_widget(instructions, popup_layout[2]);
 }
 
 /// Build a single help line with a title, key command, and description.

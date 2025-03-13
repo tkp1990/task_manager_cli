@@ -31,6 +31,7 @@ pub enum InputMode {
     AddingTaskName,
     AddingTaskDescription,
     EditingTask,
+    DeleteTask,
     AddingTopic,
     Help,
     //EditingTopic,
