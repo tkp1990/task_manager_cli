@@ -346,8 +346,9 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             // If task is expanded, show extra details; otherwise, only show the task name.
             let lines = if app.expanded.contains(&task.id) {
                 vec![
+                    Spans::from(Span::styled(format!("{}", task.name), description_style)),
                     Spans::from(Span::styled(
-                        format!("{}", task.description),
+                        format!("Description: {}", task.description),
                         description_style,
                     )),
                     Spans::from(Span::styled(
@@ -364,7 +365,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 ]
             } else {
                 vec![Spans::from(Span::styled(
-                    format!("{}", task.description),
+                    format!("{}", task.name),
                     description_style,
                 ))]
             };
