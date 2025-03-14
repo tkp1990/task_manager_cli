@@ -119,6 +119,11 @@ impl App {
             app.add_topic("Favourites")?;
             app.load_topics()?;
         }
+        // Ensure Default topic exists.
+        if !app.topics.iter().any(|t| t.name == "Default") {
+            app.add_topic("Default")?;
+            app.load_topics()?;
+        }
         app.add_log("INFO", "Topics loaded");
         // Set default selected topic to Favourites
         if let Some((i, _)) = app
@@ -143,18 +148,25 @@ impl App {
             return Ok(());
         }
         let current_topic = &self.topics[self.selected_topic];
-        let mut stmt = if current_topic.name == "Favourites" {
-            conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task WHERE favourite = 1 ORDER BY id")?
-        } else {
-            conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task WHERE topic_id = ?1 ORDER BY id")?
+        let mut stmt = match current_topic.name.as_str() {
+            "Favourites" => {
+                conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task WHERE favourite = 1 ORDER BY id")?
+            },
+            "Default" => {
+                // For the Default topic, show all tasks from all topics
+                conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task ORDER BY id")?
+            },
+            _ => {
+                conn.prepare("SELECT id, topic_id, name, description, completed, favourite, created_at, updated_at FROM task WHERE topic_id = ?1 ORDER BY id")?
+            }
         };
-
-        let params: &[&dyn ToSql] = if current_topic.name == "Favourites" {
-            &[]
-        } else {
-            // Note the reference to current_topic.id.
-            &[&current_topic.id]
-        };
+        let params: &[&dyn ToSql] =
+            if current_topic.name == "Favourites" || current_topic.name == "Default" {
+                &[]
+            } else {
+                // Note the reference to current_topic.id.
+                &[&current_topic.id]
+            };
         let task_iter = stmt.query_map(params, |row| {
             Ok(Task {
                 id: row.get(0)?,
@@ -353,11 +365,12 @@ impl App {
         Ok(())
     }
 
-    pub fn current_topic_is_favourites(&self) -> bool {
+    pub fn current_topic_is_special(&self) -> bool {
         if self.topics.is_empty() {
             false
         } else {
-            self.topics[self.selected_topic].name == "Favourites"
+            let name = &self.topics[self.selected_topic].name;
+            name == "Favourites" || name == "Default"
         }
     }
 
