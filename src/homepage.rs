@@ -1,4 +1,5 @@
 use crossterm::event::{self, Event, KeyCode};
+use slog::error;
 use std::io::Stdout;
 use std::{
     error::Error,
