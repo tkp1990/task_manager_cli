@@ -1,0 +1,444 @@
+{"msg":"Starting Task Manager...","level":"INFO","ts":"2025-04-09T22:16:49.22144Z","version":"0.1.0"}
+{{"msg":"Starting Task Manager...","level":"INFO","ts":"2025-04-09T22:17:36.972476Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:37.574599Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:37.575168Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:37.575808Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:37.576205Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:38.752836Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:38.753711Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:38.754204Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:38.754603Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:38.975029Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:38.978032Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:38.978328Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:38.978539Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:39.132183Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:39.13275Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:39.133266Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:39.133661Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:39.313914Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:39.314527Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:39.315149Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:39.315638Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:39.47553Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:39.475995Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:39.476368Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:39.476617Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:40.163942Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:40.164708Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:40.165351Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:40.165877Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:42.397055Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:42.397975Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:42.39904Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:42.399469Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:42.95143Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:42.952555Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:42.953174Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:42.954463Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:43.103728Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:43.104141Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:43.10458Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:43.104926Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:43.448358Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:43.449124Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:43.449909Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:43.450251Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:43.575643Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:43.576121Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:43.57667Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:43.577068Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:43.827584Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:43.828138Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:43.828598Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:43.828832Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:43.971396Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:43.972094Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:43.974698Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:43.977574Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:44.291038Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:44.291368Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:44.291666Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:44.291892Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:17:44.413189Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:17:44.413778Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:17:44.4143Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:17:44.41469Z","version":"0.1.0"}
+{"msg":"Starting Task Manager...","level":"INFO","ts":"2025-04-09T22:18:27.040109Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:18:27.87024Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:18:27.871317Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:18:27.872162Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:18:27.874737Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:18:31.316532Z","version":"0.1.0"}
+{"msg":"Missing TASK_MANAGER_DB_DIR environment variable","level":"ERRO","ts":"2025-04-09T22:18:31.317325Z","version":"0.1.0","error":"environment variable not found"}
+{"msg":"Error running Task Manager: environment variable not found","level":"ERRO","ts":"2025-04-09T22:18:31.317883Z","version":"0.1.0"}
+{"msg":"Exiting the app","level":"ERRO","ts":"2025-04-09T22:18:31.318284Z","version":"0.1.0"}
+{"msg":"Starting Task Manager...","level":"INFO","ts":"2025-04-09T22:21:28.649698Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:21:29.376355Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:21:29.376762Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:21:29.377021Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:21:29.377267Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:21:29.377522Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:21:29.377841Z","version":"0.1.0"}
+{"msg":"Starting Task Manager...","level":"INFO","ts":"2025-04-09T22:23:46.80682Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:23:48.708383Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:23:48.709036Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:23:48.70954Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:23:48.71036Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:23:48.710857Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:23:48.711244Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:23:51.073721Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:23:51.080799Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:23:51.081209Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:23:51.081791Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:23:51.084821Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:23:51.087753Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:23:52.974597Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:23:52.975298Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:23:52.975962Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:23:52.979026Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:23:52.981567Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:23:52.982007Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:23:54.315324Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:23:54.315706Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:23:54.316032Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:23:54.316546Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:23:54.316949Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:23:54.317386Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:23:56.142256Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:23:56.142692Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:23:56.143388Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:23:56.143834Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:23:56.144282Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:23:56.145261Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:23:59.285811Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:23:59.286218Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:23:59.286562Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:23:59.286908Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:23:59.28726Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:23:59.28825Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:00.245808Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:00.246514Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:00.246909Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:00.24745Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:00.247955Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:00.24831Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:01.978325Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:01.978905Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:01.981685Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:01.982337Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:01.984854Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:01.985269Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:03.52183Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:03.522813Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:03.523398Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:03.523983Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:03.524344Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:03.524694Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:04.183323Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:04.183828Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:04.184151Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:04.184397Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:04.184608Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:04.184804Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:04.6832Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:04.684433Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:04.684844Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:04.685345Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:04.685834Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:04.68646Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:04.943005Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:04.943698Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:04.944319Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:04.944748Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:04.945209Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:04.945618Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:05.172746Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:05.17377Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.174714Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:05.175133Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:05.17546Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.175764Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:05.362093Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:05.362658Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.363197Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:05.363465Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:05.363726Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.363962Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:05.552946Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:05.553586Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.554276Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:05.554738Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:05.555143Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.555601Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:05.739767Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:05.740489Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.741138Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:05.741572Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:05.742048Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:05.742457Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:06.745454Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:06.745969Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:06.746408Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:06.746814Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:06.747221Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:06.747593Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:07.441538Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:07.441875Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:07.442154Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:07.442356Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:07.44255Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:07.442751Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:07.709628Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:07.710736Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:07.71119Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:07.711648Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:07.712032Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:07.712382Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:07.930104Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:07.93051Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:07.931425Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:07.932136Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:07.932591Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:07.932974Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:08.141075Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:08.141786Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.142404Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:08.142758Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:08.143085Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.143394Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:08.342364Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:08.343914Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.344434Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:08.3449Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:08.345427Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.345755Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:08.545168Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:08.5456Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.545981Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:08.546229Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:08.54649Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.546704Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:08.748176Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:08.749115Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.749846Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:08.750194Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:08.750517Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.750817Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:08.94267Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:08.943549Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.94414Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:08.94458Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:08.945023Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:08.945414Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:09.1327Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:09.133752Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:09.134642Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:09.135074Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:09.135479Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:09.135842Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:09.32294Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:09.323744Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:09.324344Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:09.324779Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:09.325156Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:09.325456Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:10.151857Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:10.152431Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:10.152959Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:10.153336Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:10.153667Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:10.153991Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:10.602822Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:10.6033Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:10.603741Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:10.60406Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:10.604274Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:10.604467Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:10.847342Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:10.847972Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:10.848499Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:10.849024Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:10.849527Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:10.849974Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:11.072223Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:11.074912Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.075272Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:11.075754Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:11.078125Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.080775Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:11.241147Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:11.241518Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.242092Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:11.242304Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:11.242526Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.242711Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:11.438374Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:11.438876Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.439359Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:11.439592Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:11.439812Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.440014Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:11.634169Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:11.634984Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.635615Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:11.635909Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:11.636197Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.636454Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:11.800834Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:11.801427Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.801864Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:11.802186Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:11.802495Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:11.80275Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:12.299759Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:12.300225Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:12.300655Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:12.30111Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:12.302122Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:12.305228Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:12.766557Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:12.766972Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:12.767394Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:12.767597Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:12.76777Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:12.767939Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:13.207422Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:13.208257Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:13.208892Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:13.209221Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:13.209522Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:13.209793Z","version":"0.1.0"}
+{"msg":"Starting Task Manager...","level":"INFO","ts":"2025-04-09T22:24:49.916794Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:24:50.765723Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:24:50.766291Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:24:50.766857Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:24:50.767324Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:24:50.76806Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:24:50.768521Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:22.960136Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:22.960806Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:22.96331Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:22.963712Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:22.964256Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:22.967255Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:24.137032Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:24.137611Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:24.138351Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:24.138836Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:24.139313Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:24.139841Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:26.2785Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:26.280768Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:26.281312Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:26.28228Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:26.284063Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:26.284584Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:26.920634Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:26.921183Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:26.921655Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:26.922094Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:26.922832Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:26.923385Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:28.062138Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:28.062689Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:28.065217Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:28.066356Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:28.069007Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:28.072091Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:28.932232Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:28.932946Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:28.933534Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:28.933889Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:28.934284Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:28.934671Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:30.722931Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:30.724983Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:30.725412Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:30.725811Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:30.726202Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:30.726562Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:31.895771Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:31.896264Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:31.896715Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:31.897456Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:31.898149Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:31.898783Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:32.60496Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:32.606006Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:32.606689Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:32.607151Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:32.607575Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:32.607949Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:33.139126Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:33.139897Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:33.14054Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:33.140921Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:33.141273Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:33.141607Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:33.694408Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:33.695165Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:33.696047Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:33.696493Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:33.696928Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:33.697326Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:34.408021Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:34.408758Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:34.409439Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:34.409702Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:34.409943Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:34.410161Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:35.097061Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:35.097563Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:35.098023Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:35.098333Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:35.098623Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:35.098906Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:35.840373Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:35.841294Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:35.842139Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:35.842555Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:35.842909Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:35.843209Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:37.12034Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:37.121146Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:37.121541Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:37.123404Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:37.123777Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:37.124096Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:38.120681Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:38.121291Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:38.121878Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:38.122221Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:38.122556Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:38.122892Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:38.484783Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:38.485209Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:38.485567Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:38.485833Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:38.486102Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:38.486347Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:38.779994Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:38.780558Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:38.780981Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:38.781652Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:38.782065Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:38.782442Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:39.000825Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:39.00366Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:39.006796Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:39.009632Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:39.010008Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:39.010462Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:39.217345Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:39.217826Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:39.218268Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:39.219184Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:39.219637Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:39.220031Z","version":"0.1.0"}
+{"msg":"Starting Task Manager, inside task manager...","level":"INFO","ts":"2025-04-09T22:25:39.434597Z","version":"0.1.0"}
+{"msg":"DB_DIR: ~/.task_manager","level":"INFO","ts":"2025-04-09T22:25:39.435062Z","version":"0.1.0"}
+{"msg":"DB_FILENAME: task_manager.db","level":"INFO","ts":"2025-04-09T22:25:39.435458Z","version":"0.1.0"}
+{"msg":"DB_DIR: \"~/.task_manager\"","level":"INFO","ts":"2025-04-09T22:25:39.435789Z","version":"0.1.0"}
+{"msg":"DB_PATH: \"~/.task_manager/task_manager.db\"","level":"INFO","ts":"2025-04-09T22:25:39.436072Z","version":"0.1.0"}
+{"msg":"DB_PATH_STR: ~/.task_manager/task_manager.db","level":"INFO","ts":"2025-04-09T22:25:39.436347Z","version":"0.1.0"}

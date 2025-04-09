@@ -5,6 +5,25 @@ edition = "2021"
 
 [dependencies]
 tui = "0.19"
-crossterm = "0.25"
+crossterm = "0.29"
 rusqlite = "0.28"
 chrono = "0.4"
+
+diesel = { version = "2.1.0", features = ["sqlite", "chrono", "r2d2"] }
+r2d2 = "0.8.10"
+dotenv = "0.15.0"
+
+# For migration support
+diesel_migrations = "2.2.0"
+
+# For async support
+tokio = { version = "1.28.0", features = ["full"] }
+
+serde = { version = "1.0", features = ["derive"] }
+
+dirs = "6.0.0"
+slog = "2"
+slog-term = "2"
+slog-async = "2"
+slog-json = "2"
+slog-envlogger = "2"
