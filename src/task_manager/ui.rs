@@ -61,7 +61,7 @@ pub fn run<B: Backend>(
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => break,
                         KeyCode::Char('a') => {
-                            if app.current_topic_is_favourites() {
+                            if app.current_topic_is_special() {
                                 // You may show a log message if desired.
                             } else {
                                 app.input_mode = InputMode::AddingTaskName;
@@ -145,7 +145,7 @@ pub fn run<B: Backend>(
                         }
                         // Delete current topic (except Favourites)
                         KeyCode::Char('X') => {
-                            if !app.current_topic_is_favourites() {
+                            if !app.current_topic_is_special() {
                                 if let Err(e) = app.delete_topic() {
                                     eprintln!("Error deleting topic: {:?}", e);
                                     app.add_log("ERROR", "Failed to delete topic");
