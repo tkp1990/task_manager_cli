@@ -46,6 +46,7 @@ pub fn run<B: Backend>(
     // --- EVENT LOOP ---
     let tick_rate = Duration::from_millis(250);
     let mut last_tick = Instant::now();
+    terminal.clear()?;
     loop {
         terminal.draw(|f| {
             draw_ui(f, &mut app);
@@ -316,7 +317,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     // 1. Topics (Tabs), 2. Tasks list, 3. Instructions, 4. Mode, 5. Logs.
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .margin(1)
+        .margin(0)
         .constraints(
             [
                 Constraint::Length(3),  // Topics Tabs

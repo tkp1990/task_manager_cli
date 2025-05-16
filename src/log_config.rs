@@ -12,8 +12,8 @@ static LOGGER: OnceLock<Logger> = OnceLock::new();
 
 pub fn init_logger() -> &'static Logger {
     LOGGER.get_or_init(|| {
-        // ✅ Make sure logs/ exists
-        let log_dir = "logs";
+        // ✅ Make sure .logs/ exists
+        let log_dir = ".logs";
         if !Path::new(log_dir).exists() {
             create_dir_all(log_dir).expect("Failed to create logs directory");
         }
@@ -28,7 +28,7 @@ pub fn init_logger() -> &'static Logger {
             .create(true)
             .write(true)
             .append(true)
-            .open("logs/app.log")
+            .open(".logs/app.log")
             .expect("Cannot open log file");
         let file_drain = slog_json::Json::default(file).fuse();
         let file_drain = slog_async::Async::new(file_drain).build().fuse();
