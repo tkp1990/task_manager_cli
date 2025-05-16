@@ -15,6 +15,7 @@ pub enum InputMode {
     DeleteTask,
     AddingTopic,
     Help,
+    ViewingSpecialTopics,
     //EditingTopic,
 }
 
@@ -47,6 +48,10 @@ pub struct App {
     pub expanded: HashSet<i32>,
     /// Flag for the help window
     pub show_help: bool,
+    /// NEW for special topics popup
+    pub special_tab_selected: usize, // 0 = Favourites, 1 = Completed
+    pub favourites_tasks: Vec<Task>,
+    pub completed_tasks: Vec<Task>,
 }
 
 impl App {
@@ -76,6 +81,9 @@ impl App {
             log_offset: 0,
             expanded: HashSet::new(),
             show_help: false,
+            special_tab_selected: 0,
+            favourites_tasks: Vec::new(),
+            completed_tasks: Vec::new(),
         };
         app.load_topics()?;
         // Ensure Favourites topic exists.
@@ -125,7 +133,12 @@ impl App {
     }
 
     pub fn load_topics(&mut self) -> Result<(), Box<dyn Error>> {
-        self.topics = self.db_ops.load_topics()?;
+        let all_topics = self.db_ops.load_topics()?;
+        // Filter out Favourites and Completed from main topics
+        self.topics = all_topics
+            .into_iter()
+            .filter(|t| t.name != "Favourites" && t.name != "Completed")
+            .collect();
         Ok(())
     }
 
@@ -258,5 +271,28 @@ impl App {
     pub fn reset_task_inputs(&mut self) {
         self.task_name_input.clear();
         self.task_description_input.clear();
+    }
+
+    /// NEW: Load Favourites and Completed tasks
+    pub fn load_special_tasks(&mut self) -> Result<(), Box<dyn Error>> {
+        // Favourites
+        let fav_topic = Topic {
+            id: -1, // Not used
+            name: "Favourites".to_string(),
+            description: String::new(),
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        self.favourites_tasks = self.db_ops.load_tasks(&fav_topic)?;
+        // Completed
+        let completed_topic = Topic {
+            id: -1,
+            name: "Completed".to_string(),
+            description: String::new(),
+            created_at: String::new(),
+            updated_at: String::new(),
+        };
+        self.completed_tasks = self.db_ops.load_tasks(&completed_topic)?;
+        Ok(())
     }
 }

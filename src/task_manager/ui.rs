@@ -61,6 +61,12 @@ pub fn run<B: Backend>(
                 match app.input_mode {
                     InputMode::Normal => match key.code {
                         KeyCode::Char('q') => break,
+                        KeyCode::Char('W') => {
+                            // Shift+W: open special topics popup
+                            app.input_mode = InputMode::ViewingSpecialTopics;
+                            app.special_tab_selected = 0;
+                            app.load_special_tasks().unwrap();
+                        }
                         KeyCode::Char('a') => {
                             if app.current_topic_is_special() {
                                 // You may show a log message if desired.
@@ -299,6 +305,22 @@ pub fn run<B: Backend>(
                         }
                         _ => {}
                     },
+                    InputMode::ViewingSpecialTopics => match key.code {
+                        KeyCode::Left => {
+                            if app.special_tab_selected > 0 {
+                                app.special_tab_selected -= 1;
+                            }
+                        }
+                        KeyCode::Right => {
+                            if app.special_tab_selected < 1 {
+                                app.special_tab_selected += 1;
+                            }
+                        }
+                        KeyCode::Esc => {
+                            app.input_mode = InputMode::Normal;
+                        }
+                        _ => {}
+                    },
                 }
             }
         }
@@ -436,6 +458,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         InputMode::DeleteTask => "Delete Task",
         InputMode::AddingTopic => "Adding Topic",
         InputMode::Help => "Viewing Help",
+        InputMode::ViewingSpecialTopics => "Viewing Special Topics",
     };
     let mode =
         Paragraph::new(mode_text).block(Block::default().borders(Borders::ALL).title("Mode"));
@@ -480,6 +503,10 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     if app.input_mode == InputMode::DeleteTask {
         draw_delete_popup(f, app);
+    }
+
+    if app.input_mode == InputMode::ViewingSpecialTopics {
+        draw_special_topics_popup(f, app);
     }
 }
 
@@ -686,4 +713,57 @@ pub fn get_help_text() -> Vec<Spans<'static>> {
         build_help_line("Toggle Help:", "Ctrl+h", "to hide help."),
         build_help_line("Quit:", "'q'", "to exit the application."),
     ]
+}
+
+fn draw_special_topics_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    let size = f.size();
+    let popup_area = centered_rect(60, 60, size);
+    f.render_widget(Clear, popup_area);
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Tabs
+            Constraint::Min(5),    // Task list
+        ])
+        .split(popup_area);
+    // Tabs
+    let tab_titles = vec![Spans::from("Favourites"), Spans::from("Completed")];
+    let tabs = Tabs::new(tab_titles)
+        .select(app.special_tab_selected)
+        .block(Block::default().borders(Borders::ALL).title("Special Tasks"))
+        .highlight_style(Style::default().fg(Color::Yellow))
+        .divider(Span::raw("|"));
+    f.render_widget(tabs, popup_layout[0]);
+    // Task list
+    let tasks = if app.special_tab_selected == 0 {
+        &app.favourites_tasks
+    } else {
+        &app.completed_tasks
+    };
+    let items: Vec<ListItem> = tasks
+        .iter()
+        .map(|task| {
+            let description_style = if task.completed {
+                Style::default().fg(Color::Green)
+            } else {
+                Style::default().fg(Color::Cyan)
+            };
+            let lines = vec![Spans::from(Span::styled(
+                format!("{}: {}", task.name, task.description),
+                description_style,
+            ))];
+            ListItem::new(lines)
+        })
+        .collect();
+    let tasks_list = List::new(items)
+        .block(Block::default().borders(Borders::ALL).title("Tasks"))
+        .highlight_style(
+            Style::default()
+                .bg(Color::Blue)
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        );
+    let mut list_state = ListState::default();
+    // No selection for now
+    f.render_stateful_widget(tasks_list, popup_layout[1], &mut list_state);
 }
