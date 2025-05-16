@@ -306,12 +306,12 @@ pub fn run<B: Backend>(
                         _ => {}
                     },
                     InputMode::ViewingSpecialTopics => match key.code {
-                        KeyCode::Left => {
+                        KeyCode::Left | KeyCode::Char('h') => {
                             if app.special_tab_selected > 0 {
                                 app.special_tab_selected -= 1;
                             }
                         }
-                        KeyCode::Right => {
+                        KeyCode::Right | KeyCode::Char('l') => {
                             if app.special_tab_selected < 1 {
                                 app.special_tab_selected += 1;
                             }
@@ -710,6 +710,9 @@ pub fn get_help_text() -> Vec<Spans<'static>> {
             "to delete the current topic (Favourites is protected).",
         ),
         build_help_line("Scroll Logs:", "PageUp/PageDown", "to scroll logs."),
+        build_help_line("Open Favourites/Completed:", "Shift+W", "open a floating window with Favourites and Completed tabs."),
+        build_help_line("Switch Special Tabs:", "Left/Right or h/l", "switch between Favourites and Completed in the popup."),
+        build_help_line("Close Popup:", "Esc", "close the Favourites/Completed window."),
         build_help_line("Toggle Help:", "Ctrl+h", "to hide help."),
         build_help_line("Quit:", "'q'", "to exit the application."),
     ]
