@@ -92,6 +92,10 @@ impl DbOperations {
                 .filter(task::favourite.eq(true))
                 .order_by(task::id)
                 .load::<Task>(&mut conn),
+            "Completed" => task::table
+                .filter(task::completed.eq(true))
+                .order_by(task::id)
+                .load::<Task>(&mut conn),
             "Default" => task::table.order_by(task::id).load::<Task>(&mut conn),
             _ => task::table
                 .filter(task::topic_id.eq(current_topic.id))
