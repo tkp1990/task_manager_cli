@@ -50,6 +50,8 @@ pub struct App {
     pub show_help: bool,
     /// NEW for special topics popup
     pub special_tab_selected: usize, // 0 = Favourites, 1 = Completed
+    pub special_task_selected: usize, // Selected task in special popup
+    pub deleting_from_special: bool, // Track if delete is from special popup
     pub favourites_tasks: Vec<Task>,
     pub completed_tasks: Vec<Task>,
 }
@@ -82,34 +84,41 @@ impl App {
             expanded: HashSet::new(),
             show_help: false,
             special_tab_selected: 0,
+            special_task_selected: 0,
+            deleting_from_special: false,
             favourites_tasks: Vec::new(),
             completed_tasks: Vec::new(),
         };
-        app.load_topics()?;
+        // Load all topics (unfiltered) to check for special topics
+        let all_topics = app.db_ops.load_topics()?;
+        
         // Ensure Favourites topic exists.
-        if !app.topics.iter().any(|t| t.name == "Favourites") {
+        if !all_topics.iter().any(|t| t.name == "Favourites") {
             app.add_topic("Favourites")?;
-            app.load_topics()?;
         }
         // Ensure Default topic exists.
-        if !app.topics.iter().any(|t| t.name == "Default") {
+        if !all_topics.iter().any(|t| t.name == "Default") {
             app.add_topic("Default")?;
-            app.load_topics()?;
         }
         // Ensure Completed topic exists.
-        if !app.topics.iter().any(|t| t.name == "Completed") {
+        if !all_topics.iter().any(|t| t.name == "Completed") {
             app.add_topic("Completed")?;
-            app.load_topics()?;
         }
+        
+        // Now load filtered topics for display
+        app.load_topics()?;
         app.add_log("INFO", "Topics loaded");
-        // Set default selected topic to Favourites
+        
+        // Set default selected topic to Default (or first topic if Default doesn't exist)
         if let Some((i, _)) = app
             .topics
             .iter()
             .enumerate()
-            .find(|(_, t)| t.name == "Favourites")
+            .find(|(_, t)| t.name == "Default")
         {
             app.selected_topic = i;
+        } else if !app.topics.is_empty() {
+            app.selected_topic = 0;
         }
         app.load_tasks()?;
         app.add_log("INFO", "Tasks loaded");
@@ -121,13 +130,21 @@ impl App {
     pub fn load_tasks(&mut self) -> Result<(), Box<dyn Error>> {
         self.tasks.clear();
         if self.topics.is_empty() {
+            self.selected = 0;
             return Ok(());
+        }
+        // Bounds check for selected_topic
+        if self.selected_topic >= self.topics.len() {
+            self.selected_topic = 0;
         }
         let current_topic = &self.topics[self.selected_topic];
         self.tasks = self.db_ops.load_tasks(current_topic)?;
 
+        // Bounds check for selected task
         if self.selected >= self.tasks.len() && !self.tasks.is_empty() {
             self.selected = self.tasks.len() - 1;
+        } else if self.tasks.is_empty() {
+            self.selected = 0;
         }
         Ok(())
     }
@@ -194,6 +211,8 @@ impl App {
             self.db_ops.toggle_task_completion(task.id)?;
             self.add_log("INFO", &format!("Toggled task id: {}", task.id));
             self.load_tasks()?;
+            // Auto-refresh special tasks if popup might be open
+            self.load_special_tasks()?;
         }
         Ok(())
     }
@@ -206,6 +225,8 @@ impl App {
                 &format!("Toggled favourite for task id: {}", task.id),
             );
             self.load_tasks()?;
+            // Auto-refresh special tasks if popup might be open
+            self.load_special_tasks()?;
         }
         Ok(())
     }
@@ -293,6 +314,71 @@ impl App {
             updated_at: String::new(),
         };
         self.completed_tasks = self.db_ops.load_tasks(&completed_topic)?;
+        
+        // Bounds check for special_task_selected
+        let current_tasks = if self.special_tab_selected == 0 {
+            &self.favourites_tasks
+        } else {
+            &self.completed_tasks
+        };
+        if self.special_task_selected >= current_tasks.len() && !current_tasks.is_empty() {
+            self.special_task_selected = current_tasks.len() - 1;
+        } else if current_tasks.is_empty() {
+            self.special_task_selected = 0;
+        }
+        Ok(())
+    }
+
+    /// Get current special tasks based on selected tab
+    pub fn get_current_special_tasks(&self) -> &Vec<Task> {
+        if self.special_tab_selected == 0 {
+            &self.favourites_tasks
+        } else {
+            &self.completed_tasks
+        }
+    }
+
+    /// Toggle completion for task in special popup
+    pub fn toggle_special_task(&mut self) -> Result<(), Box<dyn Error>> {
+        let tasks = self.get_current_special_tasks();
+        if let Some(task) = tasks.get(self.special_task_selected) {
+            self.db_ops.toggle_task_completion(task.id)?;
+            self.add_log("INFO", &format!("Toggled task id: {}", task.id));
+            // Reload both special task lists and main tasks
+            self.load_special_tasks()?;
+            self.load_tasks()?;
+        }
+        Ok(())
+    }
+
+    /// Toggle favourite for task in special popup
+    pub fn toggle_special_favourite(&mut self) -> Result<(), Box<dyn Error>> {
+        let tasks = self.get_current_special_tasks();
+        if let Some(task) = tasks.get(self.special_task_selected) {
+            self.db_ops.toggle_task_favourite(task.id)?;
+            self.add_log("INFO", &format!("Toggled favourite for task id: {}", task.id));
+            // Reload both special task lists and main tasks
+            self.load_special_tasks()?;
+            self.load_tasks()?;
+        }
+        Ok(())
+    }
+
+    /// Delete task in special popup
+    pub fn delete_special_task(&mut self) -> Result<(), Box<dyn Error>> {
+        let tasks = self.get_current_special_tasks();
+        if let Some(task) = tasks.get(self.special_task_selected) {
+            self.db_ops.delete_task(task.id)?;
+            self.add_log("INFO", &format!("Deleted task id: {}", task.id));
+            // Reload both special task lists and main tasks
+            self.load_special_tasks()?;
+            self.load_tasks()?;
+            // Adjust selected index if needed
+            let new_tasks = self.get_current_special_tasks();
+            if self.special_task_selected > 0 && self.special_task_selected >= new_tasks.len() {
+                self.special_task_selected -= 1;
+            }
+        }
         Ok(())
     }
 }

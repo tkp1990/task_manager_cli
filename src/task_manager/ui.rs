@@ -77,6 +77,7 @@ pub fn run<B: Backend>(
                         }
                         // Delete the selected task
                         KeyCode::Char('d') => {
+                            app.deleting_from_special = false;
                             app.input_mode = InputMode::DeleteTask;
                         }
                         KeyCode::Char('e') => {
@@ -259,13 +260,23 @@ pub fn run<B: Backend>(
                     },
                     InputMode::DeleteTask => match key.code {
                         KeyCode::Char('y') => {
-                            if let Err(e) = app.delete_task() {
-                                eprintln!("Error deleting task: {:?}", e);
-                                app.add_log("ERROR", "Failed to delete task");
+                            if app.deleting_from_special {
+                                if let Err(e) = app.delete_special_task() {
+                                    eprintln!("Error deleting task: {:?}", e);
+                                    app.add_log("ERROR", "Failed to delete task");
+                                }
+                                app.deleting_from_special = false;
+                                app.input_mode = InputMode::ViewingSpecialTopics;
+                            } else {
+                                if let Err(e) = app.delete_task() {
+                                    eprintln!("Error deleting task: {:?}", e);
+                                    app.add_log("ERROR", "Failed to delete task");
+                                }
+                                app.input_mode = InputMode::Normal;
                             }
-                            app.input_mode = InputMode::Normal;
                         }
                         KeyCode::Char('n') | KeyCode::Esc => {
+                            app.deleting_from_special = false;
                             app.input_mode = InputMode::Normal;
                         }
                         _ => {}
@@ -309,12 +320,55 @@ pub fn run<B: Backend>(
                         KeyCode::Left | KeyCode::Char('h') => {
                             if app.special_tab_selected > 0 {
                                 app.special_tab_selected -= 1;
+                                app.special_task_selected = 0;
+                                app.load_special_tasks().unwrap();
                             }
                         }
                         KeyCode::Right | KeyCode::Char('l') => {
                             if app.special_tab_selected < 1 {
                                 app.special_tab_selected += 1;
+                                app.special_task_selected = 0;
+                                app.load_special_tasks().unwrap();
                             }
+                        }
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            if app.special_task_selected > 0 {
+                                app.special_task_selected -= 1;
+                            }
+                        }
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            let tasks = app.get_current_special_tasks();
+                            if app.special_task_selected < tasks.len().saturating_sub(1) {
+                                app.special_task_selected += 1;
+                            }
+                        }
+                        KeyCode::Enter => {
+                            // Toggle expansion of the selected task
+                            let task_id = app.get_current_special_tasks()
+                                .get(app.special_task_selected)
+                                .map(|task| task.id);
+                            if let Some(id) = task_id {
+                                if app.expanded.contains(&id) {
+                                    app.expanded.remove(&id);
+                                } else {
+                                    app.expanded.insert(id);
+                                }
+                            }
+                        }
+                        KeyCode::Char('t') => {
+                            if let Err(e) = app.toggle_special_task() {
+                                eprintln!("Error toggling task: {:?}", e);
+                                app.add_log("ERROR", "Failed to toggle task");
+                            }
+                        }
+                        KeyCode::Char('f') => {
+                            if let Err(e) = app.toggle_special_favourite() {
+                                eprintln!("Error toggling favourite: {:?}", e);
+                                app.add_log("ERROR", "Failed to toggle favourite");
+                            }
+                        }
+                        KeyCode::Char('d') => {
+                            app.input_mode = InputMode::DeleteTask;
                         }
                         KeyCode::Esc => {
                             app.input_mode = InputMode::Normal;
@@ -353,58 +407,70 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .split(size);
 
     // --- TOPICS SECTION (Tabs) ---
-    let titles: Vec<Spans> = app
-        .topics
-        .iter()
-        .map(|t| Spans::from(Span::raw(&t.name)))
-        .collect();
+    let titles: Vec<Spans> = if app.topics.is_empty() {
+        vec![Spans::from(Span::styled(
+            "No topics. Press 'N' to add a topic.",
+            Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC),
+        ))]
+    } else {
+        app.topics
+            .iter()
+            .map(|t| Spans::from(Span::raw(&t.name)))
+            .collect()
+    };
     let tabs = Tabs::new(titles)
-        .select(app.selected_topic)
+        .select(if app.topics.is_empty() { 0 } else { app.selected_topic })
         .block(Block::default().borders(Borders::ALL).title("Topics"))
         .highlight_style(Style::default().fg(Color::Yellow))
         .divider(Span::raw("|"));
     f.render_widget(tabs, chunks[0]);
 
     // --- TASKS SECTION ---
-    let items: Vec<ListItem> = app
-        .tasks
-        .iter()
-        .map(|task| {
-            // Determine the text style based on completion status.
-            let description_style = if task.completed {
-                Style::default().fg(Color::Green)
-            } else {
-                Style::default().fg(Color::Cyan)
-            };
-            // If task is expanded, show extra details; otherwise, only show the task name.
-            let lines = if app.expanded.contains(&task.id) {
-                vec![
-                    Spans::from(Span::styled(format!("{}", task.name), description_style)),
-                    Spans::from(Span::styled(
-                        format!("Description: {}", task.description),
+    let items: Vec<ListItem> = if app.tasks.is_empty() {
+        vec![ListItem::new(vec![Spans::from(Span::styled(
+            "No tasks in this topic. Press 'a' to add a task.",
+            Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC),
+        ))])]
+    } else {
+        app.tasks
+            .iter()
+            .map(|task| {
+                // Determine the text style based on completion status.
+                let description_style = if task.completed {
+                    Style::default().fg(Color::Green)
+                } else {
+                    Style::default().fg(Color::Cyan)
+                };
+                // If task is expanded, show extra details; otherwise, only show the task name.
+                let lines = if app.expanded.contains(&task.id) {
+                    vec![
+                        Spans::from(Span::styled(format!("{}", task.name), description_style)),
+                        Spans::from(Span::styled(
+                            format!("Description: {}", task.description),
+                            description_style,
+                        )),
+                        Spans::from(Span::styled(
+                            format!(
+                                "ID: {} | Completed: {} | Favourite: {} | Created: {} | Updated: {}",
+                                task.id,
+                                if task.completed { "Yes" } else { "No" },
+                                if task.favourite { "Yes" } else { "No" },
+                                task.created_at,
+                                task.updated_at
+                            ),
+                            Style::default().fg(Color::Gray),
+                        )),
+                    ]
+                } else {
+                    vec![Spans::from(Span::styled(
+                        format!("{}", task.name),
                         description_style,
-                    )),
-                    Spans::from(Span::styled(
-                        format!(
-                            "ID: {} | Completed: {} | Favourite: {} | Created: {} | Updated: {}",
-                            task.id,
-                            if task.completed { "Yes" } else { "No" },
-                            if task.favourite { "Yes" } else { "No" },
-                            task.created_at,
-                            task.updated_at
-                        ),
-                        Style::default().fg(Color::Gray),
-                    )),
-                ]
-            } else {
-                vec![Spans::from(Span::styled(
-                    format!("{}", task.name),
-                    description_style,
-                ))]
-            };
-            ListItem::new(lines)
-        })
-        .collect();
+                    ))]
+                };
+                ListItem::new(lines)
+            })
+            .collect()
+    };
 
     let tasks_list = List::new(items)
         .block(Block::default().borders(Borders::ALL).title("Tasks"))
@@ -417,7 +483,9 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .highlight_symbol("=> ");
 
     let mut list_state = ListState::default();
-    list_state.select(Some(app.selected));
+    if !app.tasks.is_empty() {
+        list_state.select(Some(app.selected));
+    }
     f.render_stateful_widget(tasks_list, chunks[1], &mut list_state);
 
     // --- INSTRUCTIONS SECTION ---
@@ -712,21 +780,24 @@ pub fn get_help_text() -> Vec<Spans<'static>> {
         build_help_line("Scroll Logs:", "PageUp/PageDown", "to scroll logs."),
         build_help_line("Open Favourites/Completed:", "Shift+W", "open a floating window with Favourites and Completed tabs."),
         build_help_line("Switch Special Tabs:", "Left/Right or h/l", "switch between Favourites and Completed in the popup."),
+        build_help_line("Navigate Special Tasks:", "Up/Down or j/k", "navigate tasks in the special popup."),
+        build_help_line("Special Popup Actions:", "t/f/d/Enter", "toggle complete/favourite, delete, or expand in popup."),
         build_help_line("Close Popup:", "Esc", "close the Favourites/Completed window."),
-        build_help_line("Toggle Help:", "Ctrl+h", "to hide help."),
+        build_help_line("Toggle Help:", "'H'", "to show/hide help."),
         build_help_line("Quit:", "'q'", "to exit the application."),
     ]
 }
 
 fn draw_special_topics_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let size = f.size();
-    let popup_area = centered_rect(60, 60, size);
+    let popup_area = centered_rect(70, 70, size);
     f.render_widget(Clear, popup_area);
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3), // Tabs
             Constraint::Min(5),    // Task list
+            Constraint::Length(3), // Instructions
         ])
         .split(popup_area);
     // Tabs
@@ -737,27 +808,54 @@ fn draw_special_topics_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .highlight_style(Style::default().fg(Color::Yellow))
         .divider(Span::raw("|"));
     f.render_widget(tabs, popup_layout[0]);
+    
     // Task list
-    let tasks = if app.special_tab_selected == 0 {
-        &app.favourites_tasks
+    let tasks = app.get_current_special_tasks();
+    let items: Vec<ListItem> = if tasks.is_empty() {
+        vec![ListItem::new(vec![Spans::from(Span::styled(
+            "No tasks found.",
+            Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC),
+        ))])]
     } else {
-        &app.completed_tasks
+        tasks
+            .iter()
+            .map(|task| {
+                let description_style = if task.completed {
+                    Style::default().fg(Color::Green)
+                } else {
+                    Style::default().fg(Color::Cyan)
+                };
+                // If task is expanded, show extra details
+                let lines = if app.expanded.contains(&task.id) {
+                    vec![
+                        Spans::from(Span::styled(format!("{}", task.name), description_style)),
+                        Spans::from(Span::styled(
+                            format!("Description: {}", task.description),
+                            description_style,
+                        )),
+                        Spans::from(Span::styled(
+                            format!(
+                                "ID: {} | Completed: {} | Favourite: {} | Created: {} | Updated: {}",
+                                task.id,
+                                if task.completed { "Yes" } else { "No" },
+                                if task.favourite { "Yes" } else { "No" },
+                                task.created_at,
+                                task.updated_at
+                            ),
+                            Style::default().fg(Color::Gray),
+                        )),
+                    ]
+                } else {
+                    vec![Spans::from(Span::styled(
+                        format!("{}: {}", task.name, task.description),
+                        description_style,
+                    ))]
+                };
+                ListItem::new(lines)
+            })
+            .collect()
     };
-    let items: Vec<ListItem> = tasks
-        .iter()
-        .map(|task| {
-            let description_style = if task.completed {
-                Style::default().fg(Color::Green)
-            } else {
-                Style::default().fg(Color::Cyan)
-            };
-            let lines = vec![Spans::from(Span::styled(
-                format!("{}: {}", task.name, task.description),
-                description_style,
-            ))];
-            ListItem::new(lines)
-        })
-        .collect();
+    
     let tasks_list = List::new(items)
         .block(Block::default().borders(Borders::ALL).title("Tasks"))
         .highlight_style(
@@ -765,8 +863,61 @@ fn draw_special_topics_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .bg(Color::Blue)
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
-        );
+        )
+        .highlight_symbol("=> ");
+    
     let mut list_state = ListState::default();
-    // No selection for now
+    if !tasks.is_empty() {
+        list_state.select(Some(app.special_task_selected));
+    }
     f.render_stateful_widget(tasks_list, popup_layout[1], &mut list_state);
+    
+    // Instructions
+    let instructions = if app.input_mode == InputMode::DeleteTask {
+        "Press [Y] to confirm deletion or [N] to cancel"
+    } else {
+        "Up/Down: Navigate | Enter: Expand | t: Toggle | f: Favourite | d: Delete | Esc: Close"
+    };
+    let instructions_text = Paragraph::new(instructions)
+        .style(Style::default().fg(Color::Cyan))
+        .block(Block::default().borders(Borders::ALL).title("Instructions"));
+    f.render_widget(instructions_text, popup_layout[2]);
+    
+    // Show delete popup if needed
+    if app.input_mode == InputMode::DeleteTask && app.deleting_from_special {
+        let tasks = app.get_current_special_tasks();
+        if let Some(task) = tasks.get(app.special_task_selected) {
+            let delete_area = centered_rect(50, 20, size);
+            f.render_widget(Clear, delete_area);
+            let delete_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                ])
+                .split(delete_area);
+            
+            let delete_title = Paragraph::new("Delete Confirmation")
+                .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+                .alignment(tui::layout::Alignment::Center)
+                .block(Block::default().borders(Borders::ALL));
+            f.render_widget(delete_title, delete_layout[0]);
+            
+            let delete_msg = Paragraph::new(format!(
+                "Are you sure you want to delete \"{}\"?",
+                task.name
+            ))
+            .style(Style::default().fg(Color::Red))
+            .alignment(tui::layout::Alignment::Center)
+            .block(Block::default().borders(Borders::ALL));
+            f.render_widget(delete_msg, delete_layout[1]);
+            
+            let delete_instructions = Paragraph::new("Press [Y] to confirm or [N] to cancel")
+                .style(Style::default().fg(Color::Cyan))
+                .alignment(tui::layout::Alignment::Center)
+                .block(Block::default().borders(Borders::ALL));
+            f.render_widget(delete_instructions, delete_layout[2]);
+        }
+    }
 }
