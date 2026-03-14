@@ -1,6 +1,7 @@
 pub mod db;
 mod homepage;
 mod log_config;
+mod notes;
 mod task_manager;
 use slog::info;
 

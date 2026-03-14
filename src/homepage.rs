@@ -17,6 +17,7 @@ use tui::{
 #[derive(Clone)]
 pub enum AppTool {
     TaskManager,
+    Notes,
     // Future tools can be added here.
 }
 
@@ -24,14 +25,22 @@ impl AppTool {
     pub fn title(&self) -> &'static str {
         match self {
             AppTool::TaskManager => "Task Manager",
+            AppTool::Notes => "Notes",
         }
     }
 
-    pub fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<Stdout>>) {
+    pub fn run(
+        &mut self,
+        terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    ) -> Result<(), Box<dyn Error>> {
         match self {
             AppTool::TaskManager => {
                 // Launch the Task Manager tool.
-                crate::task_manager::run_task_manager(terminal).unwrap();
+                crate::task_manager::run_task_manager(terminal)
+            }
+            AppTool::Notes => {
+                // Launch the Notes app.
+                crate::notes::run_notes_app(terminal)
             }
         }
     }
@@ -41,8 +50,9 @@ impl AppTool {
 pub fn run_homepage(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
 ) -> Result<(), Box<dyn Error>> {
-    let tools = vec![AppTool::TaskManager];
+    let tools = vec![AppTool::TaskManager, AppTool::Notes];
     let mut selected = 0;
+    let mut error_message: Option<String> = None;
     let tick_rate = Duration::from_millis(250);
     let mut last_tick = Instant::now();
 
@@ -55,10 +65,15 @@ pub fn run_homepage(
                 .constraints([Constraint::Length(3), Constraint::Min(3)].as_ref())
                 .split(size);
 
-            let header = Paragraph::new(
-                "Homepage - Select a Tool (Use arrow keys and Enter). Press q to quit.",
-            )
-            .block(Block::default().borders(Borders::ALL));
+            let header_text = match &error_message {
+                Some(message) => format!(
+                    "Homepage - Select a Tool (Use arrow keys and Enter). Press q to quit. Last error: {message}"
+                ),
+                None => "Homepage - Select a Tool (Use arrow keys and Enter). Press q to quit."
+                    .to_string(),
+            };
+            let header =
+                Paragraph::new(header_text).block(Block::default().borders(Borders::ALL));
             f.render_widget(header, chunks[0]);
 
             let items: Vec<ListItem> = tools
@@ -102,7 +117,7 @@ pub fn run_homepage(
                     }
                     KeyCode::Enter => {
                         let mut tool = tools[selected].clone();
-                        tool.run(terminal);
+                        error_message = tool.run(terminal).err().map(|err| err.to_string());
                     }
                     _ => {}
                 }

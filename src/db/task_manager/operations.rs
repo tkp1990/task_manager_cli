@@ -1,6 +1,6 @@
 use diesel::prelude::*;
-use diesel::result::Error;
 use std::collections::HashSet;
+use std::error::Error;
 
 use crate::db::schema::{task, topic};
 use crate::db::task_manager::models::{NewTask, NewTopic, Task, TaskUpdate, Topic};
@@ -28,16 +28,22 @@ impl DbOperations {
     }
 
     // Topic Operations
-    pub fn load_topics(&self) -> Result<Vec<Topic>, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
-
-        topic::table.order_by(topic::id).load::<Topic>(&mut conn)
+    fn get_conn(
+        &self,
+    ) -> Result<
+        diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<SqliteConnection>>,
+        Box<dyn Error>,
+    > {
+        Ok(self.pool.get()?)
     }
 
-    pub fn add_topic(&self, name: &str, description: &str) -> Result<Topic, Error> {
+    pub fn load_topics(&self) -> Result<Vec<Topic>, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
+
+        Ok(topic::table.order_by(topic::id).load::<Topic>(&mut conn)?)
+    }
+
+    pub fn add_topic(&self, name: &str, description: &str) -> Result<Topic, Box<dyn Error>> {
         let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
         let new_topic = NewTopic {
             name,
@@ -46,26 +52,20 @@ impl DbOperations {
             updated_at: &now,
         };
 
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+        let mut conn = self.get_conn()?;
 
         diesel::insert_into(topic::table)
             .values(&new_topic)
             .execute(&mut conn)?;
 
-        topic::table
+        Ok(topic::table
             .order_by(topic::id.desc())
             .limit(1)
-            .get_result::<Topic>(&mut conn)
+            .get_result::<Topic>(&mut conn)?)
     }
 
-    pub fn delete_topic(&self, topic_id: i32) -> Result<usize, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+    pub fn delete_topic(&self, topic_id: i32) -> Result<usize, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
 
         // First get the topic to check if it's a special topic
         let topic: Topic = topic::table
@@ -77,34 +77,36 @@ impl DbOperations {
             return Ok(0);
         }
 
-        diesel::delete(topic::table.find(topic_id)).execute(&mut conn)
+        Ok(diesel::delete(topic::table.find(topic_id)).execute(&mut conn)?)
     }
 
     // Task Operations
-    pub fn load_tasks(&self, current_topic: &Topic) -> Result<Vec<Task>, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+    pub fn load_tasks(&self, current_topic: &Topic) -> Result<Vec<Task>, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
 
-        match current_topic.name.as_str() {
+        Ok(match current_topic.name.as_str() {
             "Favourites" => task::table
                 .filter(task::favourite.eq(true))
                 .order_by(task::id)
-                .load::<Task>(&mut conn),
+                .load::<Task>(&mut conn)?,
             "Completed" => task::table
                 .filter(task::completed.eq(true))
                 .order_by(task::id)
-                .load::<Task>(&mut conn),
-            "Default" => task::table.order_by(task::id).load::<Task>(&mut conn),
+                .load::<Task>(&mut conn)?,
+            "Default" => task::table.order_by(task::id).load::<Task>(&mut conn)?,
             _ => task::table
                 .filter(task::topic_id.eq(current_topic.id))
                 .order_by(task::id)
-                .load::<Task>(&mut conn),
-        }
+                .load::<Task>(&mut conn)?,
+        })
     }
 
-    pub fn add_task(&self, topic_id: i32, name: &str, description: &str) -> Result<Task, Error> {
+    pub fn add_task(
+        &self,
+        topic_id: i32,
+        name: &str,
+        description: &str,
+    ) -> Result<Task, Box<dyn Error>> {
         let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
         let new_task = NewTask {
             topic_id,
@@ -116,39 +118,30 @@ impl DbOperations {
             updated_at: &now,
         };
 
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+        let mut conn = self.get_conn()?;
 
         diesel::insert_into(task::table)
             .values(&new_task)
             .execute(&mut conn)?;
 
-        task::table
+        Ok(task::table
             .order_by(task::id.desc())
             .limit(1)
-            .get_result::<Task>(&mut conn)
+            .get_result::<Task>(&mut conn)?)
     }
 
-    pub fn update_task(&self, task_id: i32, update: TaskUpdate) -> Result<Task, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+    pub fn update_task(&self, task_id: i32, update: TaskUpdate) -> Result<Task, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
 
         diesel::update(task::table.find(task_id))
             .set(update)
             .execute(&mut conn)?;
 
-        task::table.find(task_id).get_result::<Task>(&mut conn)
+        Ok(task::table.find(task_id).get_result::<Task>(&mut conn)?)
     }
 
-    pub fn toggle_task_completion(&self, task_id: i32) -> Result<Task, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+    pub fn toggle_task_completion(&self, task_id: i32) -> Result<Task, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
 
         // Get current task
         let current_task = task::table.find(task_id).get_result::<Task>(&mut conn)?;
@@ -168,14 +161,11 @@ impl DbOperations {
             .set(update)
             .execute(&mut conn)?;
 
-        task::table.find(task_id).get_result::<Task>(&mut conn)
+        Ok(task::table.find(task_id).get_result::<Task>(&mut conn)?)
     }
 
-    pub fn toggle_task_favourite(&self, task_id: i32) -> Result<Task, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+    pub fn toggle_task_favourite(&self, task_id: i32) -> Result<Task, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
 
         // Get current task
         let current_task = task::table
@@ -200,15 +190,12 @@ impl DbOperations {
         // task::table
         //     .filter(task::id.eq(task_id))
         //     .get_result::<Task>(&mut conn)
-        task::table.filter(task::id.eq(task_id)).first(&mut conn)
+        Ok(task::table.filter(task::id.eq(task_id)).first(&mut conn)?)
     }
 
-    pub fn delete_task(&self, task_id: i32) -> Result<usize, Error> {
-        let mut conn = self
-            .pool
-            .get()
-            .expect("Failed to get DB connection from pool");
+    pub fn delete_task(&self, task_id: i32) -> Result<usize, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
 
-        diesel::delete(task::table.find(task_id)).execute(&mut conn)
+        Ok(diesel::delete(task::table.find(task_id)).execute(&mut conn)?)
     }
 }

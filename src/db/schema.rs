@@ -27,9 +27,18 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    use diesel::sql_types::*;
+
+    note (id) {
+        id -> Integer,
+        title -> Text,
+        content -> Text,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
 diesel::joinable!(task -> topic (topic_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    task,
-    topic,
-);
+diesel::allow_tables_to_appear_in_same_query!(task, topic, note,);
