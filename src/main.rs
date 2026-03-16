@@ -1,8 +1,10 @@
 pub mod db;
+mod filter_presets;
 mod homepage;
 mod log_config;
 mod notes;
 mod task_manager;
+mod ui_style;
 use slog::info;
 
 use crossterm::{

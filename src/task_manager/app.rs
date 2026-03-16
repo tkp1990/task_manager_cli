@@ -1,17 +1,21 @@
 use chrono::Local;
-use std::{collections::HashSet, error::Error, io};
+use std::{collections::HashSet, error::Error, io, path::PathBuf};
 
 use crate::db::task_manager::models::{Task, TaskUpdate, Topic};
 use crate::db::task_manager::operations::DbOperations;
+use crate::filter_presets::{load_presets, save_presets, SavedFilterPreset};
 
 /// The mode of the application: either in normal navigation or adding a new task.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InputMode {
     Normal,
+    CommandPalette,
     Filtering,
     FilteringSpecial,
     PresetFilters,
     PresetSpecialFilters,
+    SavingPreset,
+    SavingSpecialPreset,
     AddingTaskName,
     AddingTaskDescription,
     EditingTaskName,
@@ -39,10 +43,24 @@ pub struct App {
     pub task_filter: String,
     /// Current selected preset in the presets popup.
     pub preset_selected: usize,
+    /// User-defined presets persisted to disk.
+    pub custom_task_presets: Vec<SavedFilterPreset>,
+    /// Preset storage path.
+    pub preset_store_path: PathBuf,
+    /// Palette history storage path.
+    pub palette_history_store_path: PathBuf,
     /// Currently selected index in the task list.
     pub selected: usize,
     /// The current input mode.
     pub input_mode: InputMode,
+    /// The mode to return to after closing the command palette.
+    pub command_palette_return_mode: InputMode,
+    /// Palette query text.
+    pub command_palette_query: String,
+    /// Selected command in the palette popup.
+    pub command_palette_selected: usize,
+    /// Recently executed command ids, most recent first.
+    pub recent_palette_commands: Vec<String>,
     /// Buffer for new task input.
     pub input: String,
     /// Buffer for task name (when creating a new task)
@@ -51,6 +69,10 @@ pub struct App {
     pub task_description_input: String,
     /// Inline feedback shown inside the task form popup.
     pub task_form_message: Option<String>,
+    /// Buffer for naming a saved preset.
+    pub preset_name_input: String,
+    /// Inline feedback shown inside the preset popup.
+    pub preset_form_message: Option<String>,
     /// Log storage.
     pub logs: Vec<String>,
     /// Scroll offset to be displayed.
@@ -70,6 +92,14 @@ impl App {
     pub fn new(db_path: &str) -> Result<App, Box<dyn Error>> {
         let db_path_string = format!("sqlite://{}", db_path);
         let pool = crate::db::establish_connection_pool(&db_path_string)?;
+        let preset_store_path = PathBuf::from(db_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."))
+            .join("task_filter_presets.json");
+        let palette_history_store_path = PathBuf::from(db_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new("."))
+            .join("task_palette_history.json");
 
         // Run migrations if needed
         {
@@ -84,13 +114,22 @@ impl App {
             tasks: Vec::new(),
             task_filter: String::new(),
             preset_selected: 0,
+            custom_task_presets: load_presets(&preset_store_path)?,
+            preset_store_path,
+            palette_history_store_path: palette_history_store_path.clone(),
             selected: 0,
             selected_topic: 0,
             input_mode: InputMode::Normal,
+            command_palette_return_mode: InputMode::Normal,
+            command_palette_query: String::new(),
+            command_palette_selected: 0,
+            recent_palette_commands: load_palette_history(&palette_history_store_path)?,
             input: String::new(),
             task_name_input: String::new(),
             task_description_input: String::new(),
             task_form_message: None,
+            preset_name_input: String::new(),
+            preset_form_message: None,
             logs: Vec::new(),
             log_offset: 0,
             expanded: HashSet::new(),
@@ -457,6 +496,32 @@ impl App {
         self.input_mode = InputMode::Filtering;
     }
 
+    pub fn begin_command_palette(&mut self) {
+        self.command_palette_query.clear();
+        self.command_palette_selected = 0;
+        self.command_palette_return_mode = self.input_mode;
+        self.input_mode = InputMode::CommandPalette;
+    }
+
+    pub fn close_command_palette(&mut self) {
+        self.command_palette_query.clear();
+        self.command_palette_selected = 0;
+        self.input_mode = self.command_palette_return_mode;
+    }
+
+    pub fn record_palette_command(&mut self, command_id: &str) -> Result<(), Box<dyn Error>> {
+        self.recent_palette_commands
+            .retain(|item| item != command_id);
+        self.recent_palette_commands
+            .insert(0, command_id.to_string());
+        self.recent_palette_commands.truncate(8);
+        save_palette_history(
+            &self.palette_history_store_path,
+            &self.recent_palette_commands,
+        )?;
+        Ok(())
+    }
+
     pub fn append_task_filter_char(&mut self, c: char) {
         self.task_filter.push(c);
         self.ensure_selected_visible();
@@ -482,6 +547,21 @@ impl App {
         ]
     }
 
+    pub fn all_task_filter_presets(&self) -> Vec<(String, String, bool)> {
+        let mut presets: Vec<(String, String, bool)> = self
+            .task_filter_presets()
+            .into_iter()
+            .map(|(name, query)| (name.to_string(), query.to_string(), true))
+            .collect();
+        presets.extend(
+            self.custom_task_presets
+                .iter()
+                .cloned()
+                .map(|preset| (preset.name, preset.query, false)),
+        );
+        presets
+    }
+
     pub fn begin_task_presets(&mut self) {
         self.preset_selected = 0;
         self.input_mode = InputMode::PresetFilters;
@@ -505,27 +585,109 @@ impl App {
     }
 
     pub fn apply_selected_task_preset(&mut self) {
-        if let Some((name, query)) = self
-            .task_filter_presets()
+        if let Some((name, query, _)) = self
+            .all_task_filter_presets()
             .get(self.preset_selected)
-            .copied()
+            .cloned()
         {
-            self.task_filter = query.to_string();
+            self.task_filter = query;
             self.ensure_selected_visible();
             self.add_log("INFO", &format!("Applied preset: {}", name));
         }
     }
 
     pub fn apply_selected_special_task_preset(&mut self) {
-        if let Some((name, query)) = self
-            .task_filter_presets()
+        if let Some((name, query, _)) = self
+            .all_task_filter_presets()
             .get(self.preset_selected)
-            .copied()
+            .cloned()
         {
-            self.special_task_filter = query.to_string();
+            self.special_task_filter = query;
             self.ensure_special_selection_visible();
             self.add_log("INFO", &format!("Applied special preset: {}", name));
         }
+    }
+
+    pub fn clear_preset_form(&mut self) {
+        self.preset_name_input.clear();
+        self.preset_form_message = None;
+    }
+
+    pub fn begin_save_task_preset(&mut self) {
+        if self.task_filter.trim().is_empty() {
+            self.add_log("WARN", "Set a task filter before saving a preset");
+            return;
+        }
+        self.clear_preset_form();
+        self.input_mode = InputMode::SavingPreset;
+    }
+
+    pub fn begin_save_special_task_preset(&mut self) {
+        if self.special_task_filter.trim().is_empty() {
+            self.add_log("WARN", "Set a special task filter before saving a preset");
+            return;
+        }
+        self.clear_preset_form();
+        self.input_mode = InputMode::SavingSpecialPreset;
+    }
+
+    pub fn save_named_task_preset(&mut self, special: bool) -> Result<(), Box<dyn Error>> {
+        let name = self.preset_name_input.trim();
+        if name.is_empty() {
+            return Err(
+                io::Error::new(io::ErrorKind::InvalidInput, "Preset name cannot be empty").into(),
+            );
+        }
+
+        let query = if special {
+            self.special_task_filter.trim()
+        } else {
+            self.task_filter.trim()
+        };
+        if query.is_empty() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Filter query cannot be empty",
+            )
+            .into());
+        }
+
+        if let Some(existing) = self
+            .custom_task_presets
+            .iter_mut()
+            .find(|preset| preset.name.eq_ignore_ascii_case(name))
+        {
+            existing.query = query.to_string();
+        } else {
+            self.custom_task_presets.push(SavedFilterPreset {
+                name: name.to_string(),
+                query: query.to_string(),
+            });
+        }
+        save_presets(&self.preset_store_path, &self.custom_task_presets)?;
+        self.add_log("INFO", &format!("Saved preset: {}", name));
+        Ok(())
+    }
+
+    pub fn delete_selected_task_preset(&mut self) -> Result<bool, Box<dyn Error>> {
+        let builtin_len = self.task_filter_presets().len();
+        if self.preset_selected < builtin_len {
+            return Ok(false);
+        }
+
+        let custom_index = self.preset_selected - builtin_len;
+        if custom_index < self.custom_task_presets.len() {
+            let removed = self.custom_task_presets.remove(custom_index);
+            save_presets(&self.preset_store_path, &self.custom_task_presets)?;
+            self.add_log("INFO", &format!("Deleted preset: {}", removed.name));
+            if self.preset_selected > 0
+                && self.preset_selected >= self.all_task_filter_presets().len()
+            {
+                self.preset_selected -= 1;
+            }
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     pub fn clear_task_form_message(&mut self) {
@@ -743,6 +905,23 @@ impl App {
         }
         Ok(())
     }
+}
+
+fn load_palette_history(path: &std::path::Path) -> Result<Vec<String>, Box<dyn Error>> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = std::fs::read_to_string(path)?;
+    if content.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    Ok(serde_json::from_str(&content)?)
+}
+
+fn save_palette_history(path: &std::path::Path, commands: &[String]) -> Result<(), Box<dyn Error>> {
+    let content = serde_json::to_string_pretty(commands)?;
+    std::fs::write(path, content)?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -968,6 +1147,33 @@ mod tests {
 
         app.task_filter = "topic:\"Work Projects\" -beta".to_string();
         assert_eq!(app.filtered_task_indices(), vec![0]);
+
+        let _ = fs::remove_file(db_path);
+        Ok(())
+    }
+
+    #[test]
+    fn command_palette_round_trips_mode_and_query() -> Result<(), Box<dyn std::error::Error>> {
+        let db_path = temp_db_path("command_palette");
+        let db_path_str = db_path.to_string_lossy().to_string();
+        let mut app = App::new(&db_path_str)?;
+
+        app.begin_task_filter();
+        app.command_palette_query = "stale".to_string();
+        app.begin_command_palette();
+
+        assert_eq!(app.input_mode, InputMode::CommandPalette);
+        assert_eq!(app.command_palette_return_mode, InputMode::Filtering);
+        assert!(app.command_palette_query.is_empty());
+
+        app.close_command_palette();
+        assert_eq!(app.input_mode, InputMode::Filtering);
+
+        app.record_palette_command("add_task")?;
+        app.record_palette_command("help")?;
+        app.record_palette_command("add_task")?;
+        assert_eq!(app.recent_palette_commands[0], "add_task");
+        assert_eq!(app.recent_palette_commands[1], "help");
 
         let _ = fs::remove_file(db_path);
         Ok(())

@@ -1,24 +1,27 @@
 use crossterm::event::{self, Event, KeyCode};
+use diesel::prelude::*;
+use std::fs;
 use std::io::Stdout;
-use std::{
-    error::Error,
-    time::{Duration, Instant},
-};
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant, SystemTime};
+use std::{error::Error, io};
 use tui::backend::CrosstermBackend;
-use tui::{
-    layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::Span,
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
-    Terminal,
-};
+use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans};
+use tui::widgets::{Clear, List, ListItem, ListState, Paragraph, Wrap};
+use tui::Terminal;
+
+use crate::db::notes::models::Note;
+use crate::db::schema::{note, task, topic};
+use crate::db::task_manager::models::{Task, Topic};
+use crate::ui_style::{self, Accent};
 
 /// Enum representing a tool available from the homepage.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum AppTool {
     TaskManager,
     Notes,
-    // Future tools can be added here.
 }
 
 impl AppTool {
@@ -29,73 +32,100 @@ impl AppTool {
         }
     }
 
+    fn subtitle(&self) -> &'static str {
+        match self {
+            AppTool::TaskManager => "Track topics, tasks, favourites, and completions.",
+            AppTool::Notes => "Browse files, edit markdown, and manage linked notes.",
+        }
+    }
+
+    fn accent(&self) -> Color {
+        match self {
+            AppTool::TaskManager => ui_style::accent_color(Accent::Tasks),
+            AppTool::Notes => ui_style::accent_color(Accent::Notes),
+        }
+    }
+
     pub fn run(
         &mut self,
         terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     ) -> Result<(), Box<dyn Error>> {
         match self {
-            AppTool::TaskManager => {
-                // Launch the Task Manager tool.
-                crate::task_manager::run_task_manager(terminal)
-            }
-            AppTool::Notes => {
-                // Launch the Notes app.
-                crate::notes::run_notes_app(terminal)
-            }
+            AppTool::TaskManager => crate::task_manager::run_task_manager(terminal),
+            AppTool::Notes => crate::notes::run_notes_app(terminal),
         }
     }
+}
+
+#[derive(Clone, Default)]
+struct TaskDashboard {
+    db_path: PathBuf,
+    topic_count: usize,
+    task_count: usize,
+    open_count: usize,
+    done_count: usize,
+    favourite_count: usize,
+    recent_tasks: Vec<String>,
+}
+
+#[derive(Clone, Default)]
+struct NotesDashboard {
+    db_path: PathBuf,
+    notes_root: PathBuf,
+    db_note_count: usize,
+    file_count: usize,
+    directory_count: usize,
+    recent_notes: Vec<String>,
+    recent_files: Vec<String>,
+}
+
+#[derive(Clone, Default)]
+struct HomepageDashboard {
+    tasks: TaskDashboard,
+    notes: NotesDashboard,
+    refreshed_at: String,
+}
+
+#[derive(Clone)]
+struct FileScanSummary {
+    file_count: usize,
+    directory_count: usize,
+    recent_files: Vec<String>,
 }
 
 /// Run the homepage (launcher) UI.
 pub fn run_homepage(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
 ) -> Result<(), Box<dyn Error>> {
-    let tools = vec![AppTool::TaskManager, AppTool::Notes];
+    let tools = [AppTool::TaskManager, AppTool::Notes];
     let mut selected = 0;
     let mut error_message: Option<String> = None;
+    let mut dashboard = load_dashboard().unwrap_or_else(|err| {
+        error_message = Some(err.to_string());
+        HomepageDashboard {
+            refreshed_at: "unavailable".to_string(),
+            ..HomepageDashboard::default()
+        }
+    });
     let tick_rate = Duration::from_millis(250);
     let mut last_tick = Instant::now();
 
     loop {
         terminal.draw(|f| {
             let size = f.size();
-            let chunks = Layout::default()
+            let outer = Layout::default()
                 .direction(Direction::Vertical)
-                .margin(2)
-                .constraints([Constraint::Length(3), Constraint::Min(3)].as_ref())
+                .margin(1)
+                .constraints([
+                    Constraint::Length(5),
+                    Constraint::Min(20),
+                    Constraint::Length(3),
+                ])
                 .split(size);
 
-            let header_text = match &error_message {
-                Some(message) => format!(
-                    "Homepage - Select a Tool (Use arrow keys and Enter). Press q to quit. Last error: {message}"
-                ),
-                None => "Homepage - Select a Tool (Use arrow keys and Enter). Press q to quit."
-                    .to_string(),
-            };
-            let header =
-                Paragraph::new(header_text).block(Block::default().borders(Borders::ALL));
-            f.render_widget(header, chunks[0]);
-
-            let items: Vec<ListItem> = tools
-                .iter()
-                .map(|tool| ListItem::new(Span::raw(tool.title())))
-                .collect();
-
-            let mut list_state = ListState::default();
-            list_state.select(Some(selected));
-            let list = List::new(items)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("Available Tools"),
-                )
-                .highlight_style(
-                    Style::default()
-                        .bg(Color::Blue)
-                        .fg(Color::White)
-                        .add_modifier(Modifier::BOLD),
-                );
-            f.render_stateful_widget(list, chunks[1], &mut list_state);
+            draw_header(f, outer[0], &dashboard, error_message.as_deref());
+            draw_dashboard(f, outer[1], &tools, selected, &dashboard);
+            draw_footer(f, outer[2]);
         })?;
 
         let timeout = tick_rate
@@ -105,19 +135,33 @@ pub fn run_homepage(
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => break,
-                    KeyCode::Down => {
+                    KeyCode::Char('j') | KeyCode::Down => {
                         if selected < tools.len().saturating_sub(1) {
                             selected += 1;
                         }
                     }
-                    KeyCode::Up => {
+                    KeyCode::Char('k') | KeyCode::Up => {
                         if selected > 0 {
                             selected -= 1;
                         }
                     }
+                    KeyCode::Char('r') => match load_dashboard() {
+                        Ok(new_dashboard) => {
+                            dashboard = new_dashboard;
+                            error_message = None;
+                        }
+                        Err(err) => error_message = Some(err.to_string()),
+                    },
                     KeyCode::Enter => {
-                        let mut tool = tools[selected].clone();
+                        let mut tool = tools[selected];
                         error_message = tool.run(terminal).err().map(|err| err.to_string());
+                        match load_dashboard() {
+                            Ok(new_dashboard) => dashboard = new_dashboard,
+                            Err(err) if error_message.is_none() => {
+                                error_message = Some(err.to_string());
+                            }
+                            Err(_) => {}
+                        }
                     }
                     _ => {}
                 }
@@ -129,4 +173,557 @@ pub fn run_homepage(
     }
 
     Ok(())
+}
+
+fn draw_header<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    dashboard: &HomepageDashboard,
+    error_message: Option<&str>,
+) {
+    let title_lines = vec![
+        Spans::from(Span::styled(
+            "Workspace Control Center",
+            ui_style::title_style(Accent::Primary),
+        )),
+        Spans::from(Span::styled(
+            format!(
+                "Tasks: {} total | Notes DB: {} | Note Files: {} | Refreshed: {}",
+                dashboard.tasks.task_count,
+                dashboard.notes.db_note_count,
+                dashboard.notes.file_count,
+                dashboard.refreshed_at
+            ),
+            ui_style::info_style(),
+        )),
+        Spans::from(Span::styled(
+            error_message.unwrap_or("Enter launches the selected app. r refreshes this dashboard."),
+            if error_message.is_some() {
+                ui_style::danger_style()
+            } else {
+                ui_style::muted_style()
+            },
+        )),
+    ];
+
+    let header = Paragraph::new(title_lines)
+        .block(ui_style::shell_block("Homepage"))
+        .wrap(Wrap { trim: false });
+    f.render_widget(header, area);
+}
+
+fn draw_dashboard<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    tools: &[AppTool],
+    selected: usize,
+    dashboard: &HomepageDashboard,
+) {
+    let columns = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(36), Constraint::Percentage(64)])
+        .split(area);
+
+    draw_tool_launcher(f, columns[0], tools, selected, dashboard);
+    draw_detail_panels(f, columns[1], tools[selected], dashboard);
+}
+
+fn draw_tool_launcher<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    tools: &[AppTool],
+    selected: usize,
+    dashboard: &HomepageDashboard,
+) {
+    let items: Vec<ListItem> = tools
+        .iter()
+        .map(|tool| {
+            let metric = match tool {
+                AppTool::TaskManager => format!(
+                    "{} tasks | {} open | {} done",
+                    dashboard.tasks.task_count,
+                    dashboard.tasks.open_count,
+                    dashboard.tasks.done_count
+                ),
+                AppTool::Notes => format!(
+                    "{} db notes | {} files | {} dirs",
+                    dashboard.notes.db_note_count,
+                    dashboard.notes.file_count,
+                    dashboard.notes.directory_count
+                ),
+            };
+            ListItem::new(vec![
+                Spans::from(Span::styled(
+                    tool.title(),
+                    Style::default()
+                        .fg(tool.accent())
+                        .add_modifier(Modifier::BOLD),
+                )),
+                Spans::from(Span::styled(tool.subtitle(), ui_style::body_style())),
+                Spans::from(Span::styled(metric, ui_style::subtle_style())),
+            ])
+        })
+        .collect();
+
+    let list = List::new(items)
+        .block(ui_style::surface_block("Launcher", Accent::Primary))
+        .highlight_style(ui_style::selected_style())
+        .highlight_symbol("=> ");
+
+    let mut state = ListState::default();
+    state.select(Some(selected));
+    f.render_stateful_widget(list, area, &mut state);
+}
+
+fn draw_detail_panels<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    selected_tool: AppTool,
+    dashboard: &HomepageDashboard,
+) {
+    let rows = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(7),
+            Constraint::Min(10),
+            Constraint::Length(7),
+        ])
+        .split(area);
+
+    draw_selected_tool_summary(f, rows[0], selected_tool, dashboard);
+
+    let middle = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(rows[1]);
+
+    match selected_tool {
+        AppTool::TaskManager => {
+            draw_recent_panel(
+                f,
+                middle[0],
+                "Recent Tasks",
+                &dashboard.tasks.recent_tasks,
+                Color::Yellow,
+            );
+            draw_paths_panel(
+                f,
+                middle[1],
+                "Task Manager Paths",
+                &[
+                    format!("DB: {}", dashboard.tasks.db_path.display()),
+                    format!("Topics: {}", dashboard.tasks.topic_count),
+                    format!("Favourites: {}", dashboard.tasks.favourite_count),
+                ],
+            );
+        }
+        AppTool::Notes => {
+            draw_recent_panel(
+                f,
+                middle[0],
+                "Recent DB Notes",
+                &dashboard.notes.recent_notes,
+                Color::Cyan,
+            );
+            draw_recent_panel(
+                f,
+                middle[1],
+                "Recent Note Files",
+                &dashboard.notes.recent_files,
+                Color::Green,
+            );
+        }
+    }
+
+    match selected_tool {
+        AppTool::TaskManager => draw_notes_snapshot(
+            f,
+            rows[2],
+            &[
+                format!(
+                    "Notes companion: {} files across {} directories",
+                    dashboard.notes.file_count, dashboard.notes.directory_count
+                ),
+                format!("Notes DB path: {}", dashboard.notes.db_path.display()),
+                format!("Notes root: {}", dashboard.notes.notes_root.display()),
+            ],
+        ),
+        AppTool::Notes => draw_notes_snapshot(
+            f,
+            rows[2],
+            &[
+                format!("Notes DB path: {}", dashboard.notes.db_path.display()),
+                format!("Notes root: {}", dashboard.notes.notes_root.display()),
+                format!("Task backlog: {} open tasks", dashboard.tasks.open_count),
+            ],
+        ),
+    }
+}
+
+fn draw_selected_tool_summary<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    selected_tool: AppTool,
+    dashboard: &HomepageDashboard,
+) {
+    let (title, body, accent) = match selected_tool {
+        AppTool::TaskManager => (
+            "Task Manager Snapshot",
+            vec![
+                Spans::from(vec![
+                    Span::styled("Open: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.tasks.open_count.to_string(),
+                        ui_style::warning_style(),
+                    ),
+                    Span::raw("    "),
+                    Span::styled("Done: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.tasks.done_count.to_string(),
+                        ui_style::success_style(),
+                    ),
+                ]),
+                Spans::from(vec![
+                    Span::styled("Topics: ", ui_style::muted_style()),
+                    Span::raw(dashboard.tasks.topic_count.to_string()),
+                    Span::raw("    "),
+                    Span::styled("Favourites: ", ui_style::muted_style()),
+                    Span::raw(dashboard.tasks.favourite_count.to_string()),
+                ]),
+                Spans::from(Span::styled(
+                    "Use this when you want a focused execution queue with topic-level structure.",
+                    ui_style::body_style(),
+                )),
+            ],
+            Accent::Tasks,
+        ),
+        AppTool::Notes => (
+            "Notes Snapshot",
+            vec![
+                Spans::from(vec![
+                    Span::styled("DB Notes: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.notes.db_note_count.to_string(),
+                        ui_style::title_style(Accent::Notes),
+                    ),
+                    Span::raw("    "),
+                    Span::styled("Files: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.notes.file_count.to_string(),
+                        ui_style::success_style(),
+                    ),
+                ]),
+                Spans::from(vec![
+                    Span::styled("Directories: ", ui_style::muted_style()),
+                    Span::raw(dashboard.notes.directory_count.to_string()),
+                    Span::raw("    "),
+                    Span::styled("Recent DB items: ", ui_style::muted_style()),
+                    Span::raw(dashboard.notes.recent_notes.len().to_string()),
+                ]),
+                Spans::from(Span::styled(
+                    "Use this when you want file-first navigation, markdown editing, and linked references.",
+                    ui_style::body_style(),
+                )),
+            ],
+            Accent::Notes,
+        ),
+    };
+
+    let summary = Paragraph::new(body)
+        .block(ui_style::surface_block(title, accent))
+        .wrap(Wrap { trim: false });
+    f.render_widget(summary, area);
+}
+
+fn draw_recent_panel<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    title: &str,
+    items: &[String],
+    accent: Color,
+) {
+    let lines: Vec<Spans> = if items.is_empty() {
+        vec![Spans::from(Span::styled(
+            "No items yet.",
+            ui_style::subtle_style(),
+        ))]
+    } else {
+        items
+            .iter()
+            .map(|item| {
+                Spans::from(vec![
+                    Span::styled("• ", Style::default().fg(accent)),
+                    Span::styled(item.clone(), ui_style::body_style()),
+                ])
+            })
+            .collect()
+    };
+
+    let panel = Paragraph::new(lines)
+        .block(ui_style::shell_block(title))
+        .wrap(Wrap { trim: false });
+    f.render_widget(panel, area);
+}
+
+fn draw_paths_panel<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    title: &str,
+    lines: &[String],
+) {
+    let spans = lines
+        .iter()
+        .map(|line| Spans::from(Span::styled(line.clone(), ui_style::body_style())))
+        .collect::<Vec<_>>();
+
+    let panel = Paragraph::new(spans)
+        .block(ui_style::shell_block(title))
+        .wrap(Wrap { trim: false });
+    f.render_widget(panel, area);
+}
+
+fn draw_notes_snapshot<B: tui::backend::Backend>(
+    f: &mut tui::Frame<B>,
+    area: Rect,
+    lines: &[String],
+) {
+    let spans = lines
+        .iter()
+        .map(|line| Spans::from(Span::styled(line.clone(), ui_style::muted_style())))
+        .collect::<Vec<_>>();
+    let panel = Paragraph::new(spans)
+        .block(ui_style::shell_block("Context"))
+        .wrap(Wrap { trim: false });
+    f.render_widget(panel, area);
+}
+
+fn draw_footer<B: tui::backend::Backend>(f: &mut tui::Frame<B>, area: Rect) {
+    let footer = Paragraph::new(vec![
+        ui_style::command_bar_spans(&[
+            ("Enter", "launch selected app"),
+            ("j/k", "move"),
+            ("↑/↓", "move"),
+            ("r", "refresh dashboard"),
+            ("q", "quit"),
+        ]),
+        Spans::from(Span::styled(
+            "This homepage is read-only. Launch into a tool to edit data.",
+            ui_style::muted_style(),
+        )),
+    ])
+    .block(ui_style::command_bar_block("Commands"));
+    f.render_widget(Clear, area);
+    f.render_widget(footer, area);
+}
+
+fn load_dashboard() -> Result<HomepageDashboard, Box<dyn Error>> {
+    Ok(HomepageDashboard {
+        tasks: load_task_dashboard()?,
+        notes: load_notes_dashboard()?,
+        refreshed_at: chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+    })
+}
+
+fn load_task_dashboard() -> Result<TaskDashboard, Box<dyn Error>> {
+    let db_path = crate::db::resolve_db_path(
+        "TASK_MANAGER_DB_DIR",
+        ".task_manager",
+        "TASK_MANAGER_DB_FILENAME",
+        "task_manager.db",
+    );
+    if let Some(parent) = db_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let database_url = format!("sqlite://{}", path_to_str(&db_path)?);
+    let pool = crate::db::establish_connection_pool(&database_url)?;
+    {
+        let mut conn = pool.get()?;
+        crate::db::run_migrations(&mut conn)?;
+    }
+    let mut conn = pool.get()?;
+
+    let topics = topic::table
+        .order_by(topic::id.asc())
+        .load::<Topic>(&mut conn)?;
+    let tasks = task::table
+        .order_by(task::updated_at.desc())
+        .load::<Task>(&mut conn)?;
+
+    Ok(TaskDashboard {
+        db_path,
+        topic_count: topics.len(),
+        task_count: tasks.len(),
+        open_count: tasks.iter().filter(|task| !task.completed).count(),
+        done_count: tasks.iter().filter(|task| task.completed).count(),
+        favourite_count: tasks.iter().filter(|task| task.favourite).count(),
+        recent_tasks: tasks
+            .iter()
+            .take(6)
+            .map(|task| {
+                format!(
+                    "{} [{}] {}",
+                    if task.completed { "done" } else { "open" },
+                    task.updated_at,
+                    compact_text(&task.name, 40)
+                )
+            })
+            .collect(),
+    })
+}
+
+fn load_notes_dashboard() -> Result<NotesDashboard, Box<dyn Error>> {
+    let db_path =
+        crate::db::resolve_db_path("NOTES_DB_DIR", ".notes", "NOTES_DB_FILENAME", "notes.db");
+    let notes_root = std::env::var("NOTES_ROOT_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from(".notes/files"));
+    if let Some(parent) = db_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::create_dir_all(&notes_root)?;
+
+    let database_url = format!("sqlite://{}", path_to_str(&db_path)?);
+    let pool = crate::db::establish_connection_pool(&database_url)?;
+    {
+        let mut conn = pool.get()?;
+        crate::db::run_migrations(&mut conn)?;
+    }
+    let mut conn = pool.get()?;
+
+    let notes = note::table
+        .order_by(note::updated_at.desc())
+        .load::<Note>(&mut conn)?;
+    let file_scan = scan_notes_tree(&notes_root)?;
+
+    Ok(NotesDashboard {
+        db_path,
+        notes_root,
+        db_note_count: notes.len(),
+        file_count: file_scan.file_count,
+        directory_count: file_scan.directory_count,
+        recent_notes: notes
+            .iter()
+            .take(6)
+            .map(|note| format!("[{}] {}", note.updated_at, compact_text(&note.title, 42)))
+            .collect(),
+        recent_files: file_scan.recent_files,
+    })
+}
+
+fn scan_notes_tree(root: &Path) -> Result<FileScanSummary, Box<dyn Error>> {
+    if !root.exists() {
+        return Ok(FileScanSummary {
+            file_count: 0,
+            directory_count: 0,
+            recent_files: Vec::new(),
+        });
+    }
+
+    let mut directory_count = 0usize;
+    let mut file_entries = Vec::new();
+    collect_note_files(root, root, &mut directory_count, &mut file_entries)?;
+    file_entries.sort_by(|left, right| right.0.cmp(&left.0));
+
+    Ok(FileScanSummary {
+        file_count: file_entries.len(),
+        directory_count,
+        recent_files: file_entries
+            .into_iter()
+            .take(6)
+            .map(|(_, path)| path)
+            .collect(),
+    })
+}
+
+fn collect_note_files(
+    root: &Path,
+    dir: &Path,
+    directory_count: &mut usize,
+    file_entries: &mut Vec<(SystemTime, String)>,
+) -> Result<(), Box<dyn Error>> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let metadata = entry.metadata()?;
+        if metadata.is_dir() {
+            *directory_count += 1;
+            collect_note_files(root, &path, directory_count, file_entries)?;
+        } else {
+            let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
+            let relative = path
+                .strip_prefix(root)
+                .unwrap_or(&path)
+                .display()
+                .to_string();
+            file_entries.push((modified, compact_text(&relative, 48)));
+        }
+    }
+    Ok(())
+}
+
+fn compact_text(text: &str, max_chars: usize) -> String {
+    let trimmed = text.trim();
+    let char_count = trimmed.chars().count();
+    if char_count <= max_chars {
+        return trimmed.to_string();
+    }
+
+    trimmed
+        .chars()
+        .take(max_chars.saturating_sub(1))
+        .collect::<String>()
+        + "…"
+}
+
+fn path_to_str(path: &Path) -> Result<&str, io::Error> {
+    path.to_str()
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Path contains invalid Unicode"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{compact_text, scan_notes_tree};
+    use std::fs;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_dir(prefix: &str) -> PathBuf {
+        let unique = format!(
+            "{}_{}_{}",
+            prefix,
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock before unix epoch")
+                .as_nanos()
+        );
+        std::env::temp_dir().join(format!("task_manager_cli_homepage_{unique}"))
+    }
+
+    #[test]
+    fn compact_text_truncates_long_values() {
+        assert_eq!(compact_text("alpha beta gamma", 8), "alpha b…");
+        assert_eq!(compact_text("short", 8), "short");
+    }
+
+    #[test]
+    fn scan_notes_tree_counts_directories_and_files() -> Result<(), Box<dyn std::error::Error>> {
+        let root = temp_dir("scan_notes");
+        fs::create_dir_all(root.join("projects/alpha"))?;
+        fs::write(root.join("projects/alpha/roadmap.md"), b"# roadmap")?;
+        fs::write(root.join("inbox.md"), b"# inbox")?;
+
+        let summary = scan_notes_tree(&root)?;
+
+        assert_eq!(summary.file_count, 2);
+        assert_eq!(summary.directory_count, 2);
+        assert_eq!(summary.recent_files.len(), 2);
+        assert!(summary
+            .recent_files
+            .iter()
+            .any(|path| path.contains("roadmap.md")));
+
+        let _ = fs::remove_dir_all(root);
+        Ok(())
+    }
 }
