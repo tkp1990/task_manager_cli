@@ -7,7 +7,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
+    widgets::{Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame, Terminal,
 };
 
@@ -247,7 +247,7 @@ fn markdown_source_spans(line: &str) -> Spans<'static> {
     if indent_len > 0 {
         spans.push(Span::styled(
             line[..indent_len].to_string(),
-            Style::default().fg(Color::DarkGray),
+            ui_style::subtle_style(),
         ));
     }
 
@@ -256,25 +256,23 @@ fn markdown_source_spans(line: &str) -> Spans<'static> {
         let prefix_len = hashes.min(trimmed.len());
         spans.push(Span::styled(
             trimmed[..prefix_len].to_string(),
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
+            ui_style::title_style(Accent::Notes),
         ));
         if trimmed.len() > prefix_len {
             spans.push(Span::styled(
                 trimmed[prefix_len..].to_string(),
-                Style::default().fg(Color::White),
+                ui_style::body_style(),
             ));
         }
     } else if trimmed.starts_with("- ") || trimmed.starts_with("* ") {
         spans.push(Span::styled(
             trimmed[..2].to_string(),
-            Style::default().fg(Color::Cyan),
+            ui_style::info_style(),
         ));
         if trimmed.len() > 2 {
             spans.push(Span::styled(
                 trimmed[2..].to_string(),
-                Style::default().fg(Color::White),
+                ui_style::body_style(),
             ));
         }
     } else if trimmed.starts_with("```") {
@@ -283,15 +281,9 @@ fn markdown_source_spans(line: &str) -> Spans<'static> {
             Style::default().fg(Color::Magenta),
         ));
     } else if trimmed.starts_with('>') {
-        spans.push(Span::styled(
-            trimmed.to_string(),
-            Style::default().fg(Color::Green),
-        ));
+        spans.push(Span::styled(trimmed.to_string(), ui_style::success_style()));
     } else {
-        spans.push(Span::styled(
-            trimmed.to_string(),
-            Style::default().fg(Color::White),
-        ));
+        spans.push(Span::styled(trimmed.to_string(), ui_style::body_style()));
     }
 
     Spans::from(spans)
@@ -910,7 +902,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .constraints(
             [
                 Constraint::Min(10),    // Notes list / Note view
-                Constraint::Length(3),  // Instructions
+                Constraint::Length(5),  // Instructions
                 Constraint::Length(3),  // Mode indicator
                 Constraint::Length(10), // Logs section
             ]
@@ -949,13 +941,15 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                         ("a", "new file"),
                         ("N", "new dir"),
                         ("R", "rename"),
-                        ("M", "move"),
-                        ("C", "copy"),
                     ]),
                     ui_style::command_bar_spans(&[
+                        ("M", "move"),
+                        ("C", "copy"),
                         ("/", "search"),
                         (":", "palette"),
                         ("PgUp/PgDn", "preview"),
+                    ]),
+                    ui_style::command_bar_spans(&[
                         ("i", "inline edit"),
                         ("e", "external edit"),
                         ("p", "shortcuts"),
@@ -969,12 +963,14 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                         ("e", "edit"),
                         ("d", "delete"),
                         ("Enter", "view"),
-                        ("/", "filter"),
-                        ("p", "presets"),
                     ]),
                     ui_style::command_bar_spans(&[
+                        ("/", "filter"),
+                        ("p", "presets"),
                         ("S", "save preset"),
                         (":", "palette"),
+                    ]),
+                    ui_style::command_bar_spans(&[
                         ("Tab", "switch view"),
                         ("H", "help"),
                         ("q", "quit"),
@@ -1268,9 +1264,7 @@ fn draw_notes_list<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     } else if filtered_indices.is_empty() {
         vec![ListItem::new(vec![Spans::from(Span::styled(
             format!("No notes match \"{}\".", app.note_filter),
-            Style::default()
-                .fg(Color::Gray)
-                .add_modifier(Modifier::ITALIC),
+            ui_style::muted_style().add_modifier(Modifier::ITALIC),
         ))])]
     } else {
         filtered_indices
@@ -1286,23 +1280,21 @@ fn draw_notes_list<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
                     highlighted_spans(
                         &note.title,
                         &app.note_filter,
-                        Style::default()
-                            .fg(Color::Cyan)
-                            .add_modifier(Modifier::BOLD),
-                        Style::default().bg(Color::Yellow).fg(Color::Black),
+                        ui_style::title_style(Accent::Notes),
+                        ui_style::focused_inline_style(),
                     ),
                     highlighted_spans(
                         &preview,
                         &app.note_filter,
-                        Style::default().fg(Color::Gray),
-                        Style::default().bg(Color::Yellow).fg(Color::Black),
+                        ui_style::muted_style(),
+                        ui_style::focused_inline_style(),
                     ),
                     Spans::from(Span::styled(
                         format!(
                             "Created: {} | Updated: {}",
                             note.created_at, note.updated_at
                         ),
-                        Style::default().fg(Color::DarkGray),
+                        ui_style::subtle_style(),
                     )),
                 ])
             })
@@ -1360,25 +1352,21 @@ fn draw_file_browser<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     let items: Vec<ListItem> = if visible_entries.is_empty() {
         vec![ListItem::new(vec![Spans::from(Span::styled(
             "No files here. Press 'a' to create one.",
-            Style::default()
-                .fg(Color::Gray)
-                .add_modifier(Modifier::ITALIC),
+            ui_style::muted_style().add_modifier(Modifier::ITALIC),
         ))])]
     } else {
         visible_entries
             .iter()
             .map(|entry| {
-                let icon = if entry.is_dir { "[D]" } else { "[F]" };
                 let style = if entry.is_dir {
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD)
+                    ui_style::title_style(Accent::Notes)
                 } else {
-                    Style::default().fg(Color::White)
+                    ui_style::body_style()
                 };
                 ListItem::new(vec![
                     Spans::from(vec![
-                        Span::styled(format!("{icon} "), Style::default().fg(Color::Cyan)),
+                        ui_style::badge(if entry.is_dir { "DIR" } else { "FILE" }, Accent::Notes),
+                        Span::raw(" "),
                         Span::styled(entry.name.clone(), style),
                     ]),
                     Spans::from(Span::styled(
@@ -1394,7 +1382,7 @@ fn draw_file_browser<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
                                 crate::notes::app::format_file_size(entry.size_bytes)
                             }
                         ),
-                        Style::default().fg(Color::DarkGray),
+                        ui_style::subtle_style(),
                     )),
                 ])
             })
@@ -1577,33 +1565,26 @@ fn draw_file_view<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     let related_items: Vec<ListItem> = if related_links.is_empty() {
         vec![ListItem::new(vec![Spans::from(Span::styled(
             "No references or backlinks.",
-            Style::default().fg(Color::Gray),
+            ui_style::muted_style(),
         ))])]
     } else {
         related_links
             .iter()
             .map(|link| {
                 ListItem::new(vec![Spans::from(vec![
-                    Span::styled(
-                        format!(
-                            "{} ",
-                            if link.group.starts_with("Reference") {
-                                "[R]"
-                            } else {
-                                "[B]"
-                            }
-                        ),
-                        Style::default().fg(Color::Cyan),
-                    ),
+                    if link.group.starts_with("Reference") {
+                        ui_style::badge("REF", Accent::Notes)
+                    } else {
+                        ui_style::badge("BACK", Accent::Notes)
+                    },
+                    Span::raw(" "),
                     Span::styled(
                         link.label.clone(),
-                        Style::default()
-                            .fg(Color::White)
-                            .add_modifier(Modifier::BOLD),
+                        ui_style::body_style().add_modifier(Modifier::BOLD),
                     ),
                     Span::styled(
                         format!(" -> {}", app.relative_path_from_root(&link.path)),
-                        Style::default().fg(Color::DarkGray),
+                        ui_style::subtle_style(),
                     ),
                 ])])
             })
@@ -1648,32 +1629,28 @@ fn draw_edit_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     } else {
         "Edit Note"
     })
-    .style(
-        Style::default()
-            .fg(Color::Yellow)
-            .add_modifier(Modifier::BOLD),
-    )
-    .block(Block::default().borders(Borders::ALL));
+    .style(ui_style::title_style(Accent::Notes))
+    .block(ui_style::popup_block("Note Editor", Accent::Notes));
     f.render_widget(popup_title, popup_layout[0]);
 
     let title_style = if app.editing_title {
-        Style::default().fg(Color::Yellow)
+        ui_style::title_style(Accent::Notes)
     } else {
-        Style::default().fg(Color::Cyan)
+        ui_style::info_style()
     };
     let title_input = Paragraph::new(app.title_input.as_ref())
         .style(title_style)
-        .block(Block::default().borders(Borders::ALL).title("Title"));
+        .block(ui_style::popup_block("Title", Accent::Notes));
     f.render_widget(title_input, popup_layout[1]);
 
     let content_style = if app.editing_title {
-        Style::default().fg(Color::Gray)
+        ui_style::muted_style()
     } else {
-        Style::default().fg(Color::White)
+        ui_style::body_style()
     };
     let content_input = Paragraph::new(app.content_input.as_ref())
         .style(content_style)
-        .block(Block::default().borders(Borders::ALL).title("Content"))
+        .block(ui_style::popup_block("Content", Accent::Notes))
         .wrap(Wrap { trim: true });
     f.render_widget(content_input, popup_layout[2]);
 
@@ -1682,13 +1659,13 @@ fn draw_edit_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .clone()
         .unwrap_or_else(|| "Enter a title, then content, then save.".to_string());
     let feedback_style = if app.note_form_message.is_some() {
-        Style::default().fg(Color::Red)
+        ui_style::danger_style()
     } else {
-        Style::default().fg(Color::DarkGray)
+        ui_style::subtle_style()
     };
     let feedback = Paragraph::new(feedback_text)
         .style(feedback_style)
-        .block(Block::default().borders(Borders::ALL).title("Feedback"));
+        .block(ui_style::popup_block("Feedback", Accent::Notes));
     f.render_widget(feedback, popup_layout[3]);
 
     // Set cursor position
@@ -1709,8 +1686,8 @@ fn draw_edit_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     let instructions =
         Paragraph::new("Enter title and content. Press Enter to save, Esc to cancel.")
-            .style(Style::default().fg(Color::Cyan))
-            .block(Block::default().borders(Borders::ALL));
+            .style(ui_style::info_style())
+            .block(ui_style::popup_block("Instructions", Accent::Notes));
     f.render_widget(instructions, popup_layout[4]);
 }
 
@@ -1728,13 +1705,9 @@ fn draw_delete_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
         .split(delete_area);
 
     let delete_title = Paragraph::new("Delete Confirmation")
-        .style(
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )
+        .style(ui_style::title_style(Accent::Notes))
         .alignment(tui::layout::Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
+        .block(ui_style::popup_block("Delete Note", Accent::Notes));
     f.render_widget(delete_title, delete_layout[0]);
 
     let note_name = if let Some(note) = app.notes.get(app.selected) {
@@ -1747,15 +1720,15 @@ fn draw_delete_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
         "Are you sure you want to delete \"{}\"?",
         note_name
     ))
-    .style(Style::default().fg(Color::Red))
+    .style(ui_style::danger_style())
     .alignment(tui::layout::Alignment::Center)
-    .block(Block::default().borders(Borders::ALL));
+    .block(ui_style::popup_block("Confirmation", Accent::Notes));
     f.render_widget(delete_msg, delete_layout[1]);
 
     let delete_instructions = Paragraph::new("Press [Y] to confirm or [N] to cancel")
-        .style(Style::default().fg(Color::Cyan))
+        .style(ui_style::info_style())
         .alignment(tui::layout::Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
+        .block(ui_style::popup_block("Controls", Accent::Notes));
     f.render_widget(delete_instructions, delete_layout[2]);
 }
 
@@ -1826,7 +1799,7 @@ fn draw_help_popup<B: Backend>(f: &mut Frame<B>, size: Rect) {
     ];
 
     let help_paragraph = Paragraph::new(help_text)
-        .block(Block::default().borders(Borders::ALL).title("Help"))
+        .block(ui_style::popup_block("Help", Accent::Notes))
         .style(Style::default().fg(Color::White).bg(Color::Black))
         .wrap(Wrap { trim: true });
     f.render_widget(help_paragraph, help_area);
@@ -1843,38 +1816,27 @@ fn draw_note_presets_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Re
             ListItem::new(vec![
                 Spans::from(Span::styled(
                     name.clone(),
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
+                    ui_style::title_style(Accent::Notes),
                 )),
-                Spans::from(Span::styled(
-                    query.clone(),
-                    Style::default().fg(Color::Gray),
-                )),
+                Spans::from(Span::styled(query.clone(), ui_style::muted_style())),
                 Spans::from(Span::styled(
                     if *builtin {
                         "Built-in preset".to_string()
                     } else {
                         "Saved preset".to_string()
                     },
-                    Style::default().fg(Color::DarkGray),
+                    ui_style::subtle_style(),
                 )),
             ])
         })
         .collect();
 
     let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Note Presets (Enter apply, S save current, x delete saved)"),
-        )
-        .highlight_style(
-            Style::default()
-                .bg(Color::Blue)
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD),
-        )
+        .block(ui_style::popup_block(
+            "Note Presets (Enter apply, S save current, x delete saved)",
+            Accent::Notes,
+        ))
+        .highlight_style(ui_style::selected_style())
         .highlight_symbol("=> ");
 
     let mut state = ListState::default();
@@ -1896,17 +1858,13 @@ fn draw_save_preset_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
         .split(popup_area);
 
     let title = Paragraph::new("Save Note Filter Preset")
-        .style(
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )
-        .block(Block::default().borders(Borders::ALL));
+        .style(ui_style::title_style(Accent::Notes))
+        .block(ui_style::popup_block("Preset", Accent::Notes));
     f.render_widget(title, layout[0]);
 
     let input = Paragraph::new(app.preset_name_input.as_str())
-        .style(Style::default().fg(Color::White))
-        .block(Block::default().borders(Borders::ALL).title("Preset Name"));
+        .style(ui_style::body_style())
+        .block(ui_style::popup_block("Preset Name", Accent::Notes));
     f.render_widget(input, layout[1]);
     f.set_cursor(
         layout[1].x + app.preset_name_input.len() as u16 + 1,
@@ -1919,11 +1877,11 @@ fn draw_save_preset_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
             .unwrap_or_else(|| format!("Query: {}", app.note_filter)),
     )
     .style(if app.preset_form_message.is_some() {
-        Style::default().fg(Color::Red)
+        ui_style::danger_style()
     } else {
-        Style::default().fg(Color::DarkGray)
+        ui_style::subtle_style()
     })
-    .block(Block::default().borders(Borders::ALL).title("Feedback"));
+    .block(ui_style::popup_block("Feedback", Accent::Notes));
     f.render_widget(feedback, layout[2]);
 }
 
@@ -1949,33 +1907,28 @@ fn draw_create_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
         InputMode::CopyingFileEntry => "Copy Entry",
         _ => "Create File",
     })
-    .style(
-        Style::default()
-            .fg(Color::Yellow)
-            .add_modifier(Modifier::BOLD),
-    )
-    .block(Block::default().borders(Borders::ALL));
+    .style(ui_style::title_style(Accent::Notes))
+    .block(ui_style::popup_block("File Action", Accent::Notes));
     f.render_widget(title, layout[0]);
 
     let path = Paragraph::new(format!("Folder: {}", app.relative_current_dir()))
-        .style(Style::default().fg(Color::Cyan))
-        .block(Block::default().borders(Borders::ALL));
+        .style(ui_style::info_style())
+        .block(ui_style::popup_block("Location", Accent::Notes));
     f.render_widget(path, layout[1]);
 
     let input = Paragraph::new(app.file_name_input.as_str())
-        .style(Style::default().fg(Color::White))
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title(match app.input_mode {
-                    InputMode::CreatingDirectory => "Directory Name",
-                    InputMode::RenamingFileEntry => "New Name",
-                    InputMode::MovingFileEntry | InputMode::CopyingFileEntry => {
-                        "Destination Path (relative to notes root)"
-                    }
-                    _ => "File Name (.md added if omitted)",
-                }),
-        );
+        .style(ui_style::body_style())
+        .block(ui_style::popup_block(
+            match app.input_mode {
+                InputMode::CreatingDirectory => "Directory Name",
+                InputMode::RenamingFileEntry => "New Name",
+                InputMode::MovingFileEntry | InputMode::CopyingFileEntry => {
+                    "Destination Path (relative to notes root)"
+                }
+                _ => "File Name (.md added if omitted)",
+            },
+            Accent::Notes,
+        ));
     f.render_widget(input, layout[2]);
     f.set_cursor(
         layout[2].x + app.file_name_input.len() as u16 + 1,
@@ -1995,11 +1948,9 @@ fn draw_create_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
                 Spans::from(Span::styled(
                     format!("{prefix}{}", template.name),
                     if index == app.file_template_selected {
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD)
+                        ui_style::title_style(Accent::Notes)
                     } else {
-                        Style::default().fg(Color::Gray)
+                        ui_style::muted_style()
                     },
                 ))
             })
@@ -2007,11 +1958,11 @@ fn draw_create_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
     } else {
         vec![Spans::from(Span::styled(
             "Template selection is only used for file creation.",
-            Style::default().fg(Color::DarkGray),
+            ui_style::subtle_style(),
         ))]
     };
     let template_panel = Paragraph::new(template_body)
-        .block(Block::default().borders(Borders::ALL).title("Template"))
+        .block(ui_style::popup_block("Template", Accent::Notes))
         .wrap(Wrap { trim: false });
     f.render_widget(template_panel, layout[3]);
 
@@ -2037,11 +1988,11 @@ fn draw_create_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
                 }),
         )
         .style(if app.file_form_message.is_some() {
-            Style::default().fg(Color::Red)
+            ui_style::danger_style()
         } else {
-            Style::default().fg(Color::DarkGray)
+            ui_style::subtle_style()
         })
-        .block(Block::default().borders(Borders::ALL).title("Feedback"));
+        .block(ui_style::popup_block("Feedback", Accent::Notes));
     f.render_widget(feedback, layout[4]);
 }
 
@@ -2059,13 +2010,9 @@ fn draw_delete_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
         .split(popup_area);
 
     let title = Paragraph::new("Delete File Entry")
-        .style(
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD),
-        )
+        .style(ui_style::title_style(Accent::Notes))
         .alignment(tui::layout::Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
+        .block(ui_style::popup_block("Delete Entry", Accent::Notes));
     f.render_widget(title, layout[0]);
 
     let target = app
@@ -2080,15 +2027,15 @@ fn draw_delete_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
     let message = Paragraph::new(format!(
         "Delete {target}?\nDirectories are removed recursively."
     ))
-    .style(Style::default().fg(Color::Red))
+    .style(ui_style::danger_style())
     .alignment(tui::layout::Alignment::Center)
-    .block(Block::default().borders(Borders::ALL));
+    .block(ui_style::popup_block("Confirmation", Accent::Notes));
     f.render_widget(message, layout[1]);
 
     let instructions = Paragraph::new("Press [Y] to confirm or [N] to cancel")
-        .style(Style::default().fg(Color::Cyan))
+        .style(ui_style::info_style())
         .alignment(tui::layout::Alignment::Center)
-        .block(Block::default().borders(Borders::ALL));
+        .block(ui_style::popup_block("Controls", Accent::Notes));
     f.render_widget(instructions, layout[2]);
 }
 
@@ -2108,16 +2055,8 @@ fn draw_inline_file_editor<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Re
             .map(|path| format!("Editing {}", app.relative_path_from_root(path)))
             .unwrap_or_else(|| "Editing file".to_string()),
     )
-    .style(
-        Style::default()
-            .fg(Color::Yellow)
-            .add_modifier(Modifier::BOLD),
-    )
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .title("Inline Editor"),
-    );
+    .style(ui_style::title_style(Accent::Notes))
+    .block(ui_style::surface_block("Inline Editor", Accent::Notes));
     f.render_widget(title, chunks[0]);
 
     let content_chunks = Layout::default()
@@ -2138,7 +2077,7 @@ fn draw_inline_file_editor<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Re
         .map(|(offset, line)| {
             let mut spans = vec![Span::styled(
                 format!("{:>3} ", start + offset + 1),
-                Style::default().fg(Color::DarkGray),
+                ui_style::subtle_style(),
             )];
             spans.extend(
                 markdown_source_spans(&slice_line_for_view(
@@ -2153,14 +2092,14 @@ fn draw_inline_file_editor<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Re
         .collect::<Vec<_>>();
 
     let editor = Paragraph::new(visible_lines)
-        .style(Style::default().fg(Color::White))
-        .block(Block::default().borders(Borders::ALL).title("Markdown"))
+        .style(ui_style::body_style())
+        .block(ui_style::surface_block("Markdown", Accent::Notes))
         .wrap(Wrap { trim: false });
     f.render_widget(editor, content_chunks[0]);
 
     let preview = Paragraph::new(app.inline_editor_preview())
-        .style(Style::default().fg(Color::White))
-        .block(Block::default().borders(Borders::ALL).title("Live Preview"))
+        .style(ui_style::body_style())
+        .block(ui_style::surface_block("Live Preview", Accent::Notes))
         .wrap(Wrap { trim: false });
     f.render_widget(preview, content_chunks[1]);
 
@@ -2173,11 +2112,11 @@ fn draw_inline_file_editor<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Re
         )
     }))
     .style(if app.file_edit_message.is_some() {
-        Style::default().fg(Color::Green)
+        ui_style::success_style()
     } else {
-        Style::default().fg(Color::DarkGray)
+        ui_style::subtle_style()
     })
-    .block(Block::default().borders(Borders::ALL).title("Feedback"));
+    .block(ui_style::surface_block("Feedback", Accent::Notes));
     f.render_widget(feedback, chunks[2]);
 
     let visible_row = app
@@ -2200,7 +2139,7 @@ fn draw_file_shortcuts_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: 
     let items: Vec<ListItem> = if app.all_file_shortcuts().is_empty() {
         vec![ListItem::new(vec![Spans::from(Span::styled(
             "No shortcuts yet. Use 'm' to pin dirs or save a search with 'S' in find mode.",
-            Style::default().fg(Color::Gray),
+            ui_style::muted_style(),
         ))])]
     } else {
         app.all_file_shortcuts()
@@ -2213,13 +2152,11 @@ fn draw_file_shortcuts_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: 
                 ListItem::new(vec![
                     Spans::from(Span::styled(
                         shortcut.name.clone(),
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD),
+                        ui_style::title_style(Accent::Notes),
                     )),
                     Spans::from(Span::styled(
                         format!("{kind} | {}", shortcut.target),
-                        Style::default().fg(Color::Gray),
+                        ui_style::muted_style(),
                     )),
                 ])
             })
@@ -2227,17 +2164,11 @@ fn draw_file_shortcuts_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: 
     };
 
     let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("File Shortcuts (Enter open, x delete)"),
-        )
-        .highlight_style(
-            Style::default()
-                .bg(Color::Blue)
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD),
-        )
+        .block(ui_style::popup_block(
+            "File Shortcuts (Enter open, x delete)",
+            Accent::Notes,
+        ))
+        .highlight_style(ui_style::selected_style())
         .highlight_symbol("=> ");
 
     let mut state = ListState::default();
@@ -2255,7 +2186,7 @@ fn draw_file_links_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect
     let items: Vec<ListItem> = if links.is_empty() {
         vec![ListItem::new(vec![Spans::from(Span::styled(
             "No references or backlinks for this note.",
-            Style::default().fg(Color::Gray),
+            ui_style::muted_style(),
         ))])]
     } else {
         links
@@ -2264,13 +2195,11 @@ fn draw_file_links_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect
                 ListItem::new(vec![
                     Spans::from(Span::styled(
                         format!("{} | {}", link.group, link.label),
-                        Style::default()
-                            .fg(Color::Yellow)
-                            .add_modifier(Modifier::BOLD),
+                        ui_style::title_style(Accent::Notes),
                     )),
                     Spans::from(Span::styled(
                         link.path.display().to_string(),
-                        Style::default().fg(Color::DarkGray),
+                        ui_style::subtle_style(),
                     )),
                 ])
             })
@@ -2278,17 +2207,11 @@ fn draw_file_links_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect
     };
 
     let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Related Notes (Enter open, Esc close)"),
-        )
-        .highlight_style(
-            Style::default()
-                .bg(Color::Blue)
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD),
-        )
+        .block(ui_style::popup_block(
+            "Related Notes (Enter open, Esc close)",
+            Accent::Notes,
+        ))
+        .highlight_style(ui_style::selected_style())
         .highlight_symbol("=> ");
 
     let mut state = ListState::default();

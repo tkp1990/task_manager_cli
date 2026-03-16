@@ -29,25 +29,65 @@ This file tracks in-progress changes so the session can resume cleanly after int
 - Added preset-related app support and wiring in task manager and notes app modules.
 
 ### In Progress
-- Apply the shared popup styling system consistently across notes overlays in [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs).
+- Real-terminal validation is complete; remaining work is optional final polish.
 
 ### Last Known Resume Point
 - Task manager popup styling pass is applied.
-- Notes popup styling pass was started but interrupted before patch application completed.
-- Next step is to update notes popups and overlays:
+- Notes popup styling pass is now applied.
+- Remaining refactor cleanup is applied.
+- Real-terminal validation at 80 columns is complete.
+- Homepage density pass is now applied.
+- Next step is optional: add screenshots/release notes or do any purely aesthetic tweaks.
+
+### Verification Status
+- `cargo check` was attempted earlier but was blocked by sandbox restrictions at that time.
+- `cargo check` now passes cleanly with no warnings.
+
+### 2026-03-16 Update
+- Applied shared popup/surface styling to the remaining notes overlays in [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs).
+- Updated areas:
   - note create/edit popup
   - note delete popup
   - help popup
   - note preset popups
-  - file create/rename/move/copy popup
+  - file action popups
   - file delete popup
   - inline editor chrome
   - file shortcuts popup
   - related links popup
-
-### Verification Status
-- `cargo check` was attempted earlier but was blocked by sandbox restrictions at that time.
-- Build verification still needs to be run against the current worktree.
+- Removed refactor-specific unused imports in:
+  - [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs)
+  - [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs)
+- Normalized remaining ad hoc notes styling in [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs):
+  - markdown source rendering
+  - note list row styling
+  - file browser row styling
+  - related links styling
+- Put the shared badge helper into active use in [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs).
+- Removed the unused notes app compatibility constructor from [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs).
+- Updated notes tests and db lifecycle test to use `new_with_notes_root` in:
+  - [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs)
+  - [src/db/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/db/mod.rs)
+- Verification run:
+  - `cargo check` passes cleanly
+- Immediate next step:
+  - inspect the TUI in a real terminal for spacing, truncation, and readability issues
+  - apply any last visual polish based on actual terminal behavior
+- Final terminal-polish pass:
+  - adjusted homepage header/footer height and shortened launcher copy in [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs)
+  - increased command bar height in:
+    - [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs)
+    - [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs)
+  - split dense normal-mode command bars into shorter terminal-friendly rows in:
+    - [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs)
+    - [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs)
+  - validated live rendering by running the TUI and checking homepage, task manager, and notes at 80-column width
+  - `cargo check` still passes cleanly after the polish pass
+- Homepage calm-down pass:
+  - simplified the right-side dashboard hierarchy in [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs)
+  - kept one primary recent-activity panel instead of multiple competing middle panels
+  - shortened summary copy further so the launcher reads more cleanly at terminal width
+  - validated the updated homepage in a live terminal session
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:

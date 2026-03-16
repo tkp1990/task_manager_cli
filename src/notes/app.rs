@@ -225,15 +225,6 @@ pub struct App {
 }
 
 impl App {
-    /// Create a new App instance.
-    pub fn new(db_path: &str) -> Result<App, Box<dyn Error>> {
-        let default_root = PathBuf::from(db_path)
-            .parent()
-            .unwrap_or_else(|| Path::new("."))
-            .join("files");
-        Self::new_with_notes_root(db_path, default_root)
-    }
-
     pub fn new_with_notes_root(db_path: &str, notes_root: PathBuf) -> Result<App, Box<dyn Error>> {
         let db_file_path = PathBuf::from(db_path);
         let db_stem = db_file_path
@@ -2427,11 +2418,15 @@ mod tests {
         std::env::temp_dir().join(format!("task_manager_cli_notes_files_{unique}"))
     }
 
+    fn test_app(db_path: &str, prefix: &str) -> Result<App, Box<dyn std::error::Error>> {
+        App::new_with_notes_root(db_path, temp_notes_root(prefix))
+    }
+
     #[test]
     fn begin_add_note_resets_inputs() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("begin_add");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "begin_add")?;
 
         app.title_input = "stale".to_string();
         app.content_input = "stale".to_string();
@@ -2452,7 +2447,7 @@ mod tests {
     fn begin_edit_note_prefills_existing_content() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("begin_edit");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "begin_edit")?;
 
         app.add_note("Title", "Body")?;
         app.begin_edit_note();
@@ -2470,7 +2465,7 @@ mod tests {
     fn add_note_rejects_blank_titles() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("blank_title");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "blank_title")?;
 
         let error = app.add_note("   ", "Body").unwrap_err();
         assert!(error.to_string().contains("Note title cannot be empty"));
@@ -2483,7 +2478,7 @@ mod tests {
     fn reset_inputs_clears_inline_feedback() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("feedback");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "feedback")?;
 
         app.title_input = "Draft".to_string();
         app.content_input = "Draft body".to_string();
@@ -2503,7 +2498,7 @@ mod tests {
     fn note_filter_keeps_selection_on_visible_match() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("filter");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "filter")?;
 
         app.add_note("Alpha", "First body")?;
         app.add_note("Beta", "Second body")?;
@@ -2522,7 +2517,7 @@ mod tests {
     fn note_filter_supports_title_and_body_tokens() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("note_filter_tokens");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "note_filter_tokens")?;
 
         app.add_note("Project Alpha", "Meeting notes")?;
         app.add_note("Shopping", "Buy apples and bread")?;
@@ -2541,7 +2536,7 @@ mod tests {
     fn note_filter_supports_phrases_and_negation() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("note_filter_phrases");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "note_filter_phrases")?;
 
         app.add_note("Project Alpha", "Roadmap review notes")?;
         app.add_note("Shopping", "Buy apples and bread")?;
@@ -2560,7 +2555,7 @@ mod tests {
     fn applying_note_preset_sets_filter_and_selection() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("note_preset");
         let db_path_str = db_path.to_string_lossy().to_string();
-        let mut app = App::new(&db_path_str)?;
+        let mut app = test_app(&db_path_str, "note_preset")?;
 
         app.add_note("Project Alpha", "Meeting notes")?;
         app.add_note("Shopping", "Buy apples and bread")?;

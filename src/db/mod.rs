@@ -102,8 +102,9 @@ mod tests {
     fn notes_app_supports_basic_note_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
         let db_path = temp_db_path("notes");
         let db_path_str = db_path.to_string_lossy().to_string();
+        let notes_root = std::env::temp_dir().join("task_manager_cli_db_mod_notes_files");
 
-        let mut app = NotesApp::new(&db_path_str)?;
+        let mut app = NotesApp::new_with_notes_root(&db_path_str, notes_root.clone())?;
         app.add_note("First note", "Draft content")?;
 
         assert_eq!(app.notes.len(), 1);
@@ -118,6 +119,7 @@ mod tests {
         assert!(app.notes.is_empty());
 
         let _ = fs::remove_file(db_path);
+        let _ = fs::remove_dir_all(notes_root);
         Ok(())
     }
 }

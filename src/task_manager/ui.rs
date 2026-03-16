@@ -8,7 +8,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
+    widgets::{Clear, List, ListItem, ListState, Paragraph, Tabs, Wrap},
     Frame, Terminal,
 };
 
@@ -789,7 +789,7 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             [
                 Constraint::Length(3),  // Topics Tabs
                 Constraint::Min(5),     // Task list
-                Constraint::Length(3),  // Instructions
+                Constraint::Length(5),  // Instructions
                 Constraint::Length(3),  // Mode indicator
                 Constraint::Length(15), // Logs section
             ]
@@ -942,14 +942,16 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                     ("A", "add topic"),
                     ("e", "edit"),
                     ("d", "delete"),
-                    ("Enter", "toggle expand"),
-                    ("Space", "toggle done"),
                 ]),
                 ui_style::command_bar_spans(&[
+                    ("Enter", "expand"),
+                    ("Space", "done"),
                     ("/", "filter"),
                     ("p", "presets"),
                     (":", "palette"),
-                    ("S", "special view"),
+                ]),
+                ui_style::command_bar_spans(&[
+                    ("S", "special"),
                     ("f", "favorite"),
                     ("H", "help"),
                     ("q", "quit"),

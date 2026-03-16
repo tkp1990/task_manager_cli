@@ -34,8 +34,8 @@ impl AppTool {
 
     fn subtitle(&self) -> &'static str {
         match self {
-            AppTool::TaskManager => "Track topics, tasks, favourites, and completions.",
-            AppTool::Notes => "Browse files, edit markdown, and manage linked notes.",
+            AppTool::TaskManager => "Tasks, topics, favourites.",
+            AppTool::Notes => "Files, markdown, links.",
         }
     }
 
@@ -117,9 +117,9 @@ pub fn run_homepage(
                 .direction(Direction::Vertical)
                 .margin(1)
                 .constraints([
-                    Constraint::Length(5),
+                    Constraint::Length(6),
                     Constraint::Min(20),
-                    Constraint::Length(3),
+                    Constraint::Length(4),
                 ])
                 .split(size);
 
@@ -188,13 +188,16 @@ fn draw_header<B: tui::backend::Backend>(
         )),
         Spans::from(Span::styled(
             format!(
-                "Tasks: {} total | Notes DB: {} | Note Files: {} | Refreshed: {}",
+                "Tasks: {} total | Notes DB: {} | Note Files: {}",
                 dashboard.tasks.task_count,
                 dashboard.notes.db_note_count,
                 dashboard.notes.file_count,
-                dashboard.refreshed_at
             ),
             ui_style::info_style(),
+        )),
+        Spans::from(Span::styled(
+            format!("Refreshed: {}", dashboard.refreshed_at),
+            ui_style::muted_style(),
         )),
         Spans::from(Span::styled(
             error_message.unwrap_or("Enter launches the selected app. r refreshes this dashboard."),
@@ -221,7 +224,7 @@ fn draw_dashboard<B: tui::backend::Backend>(
 ) {
     let columns = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(36), Constraint::Percentage(64)])
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(area);
 
     draw_tool_launcher(f, columns[0], tools, selected, dashboard);
@@ -240,16 +243,12 @@ fn draw_tool_launcher<B: tui::backend::Backend>(
         .map(|tool| {
             let metric = match tool {
                 AppTool::TaskManager => format!(
-                    "{} tasks | {} open | {} done",
-                    dashboard.tasks.task_count,
-                    dashboard.tasks.open_count,
-                    dashboard.tasks.done_count
+                    "{} tasks | {} open",
+                    dashboard.tasks.task_count, dashboard.tasks.open_count,
                 ),
                 AppTool::Notes => format!(
-                    "{} db notes | {} files | {} dirs",
-                    dashboard.notes.db_note_count,
-                    dashboard.notes.file_count,
-                    dashboard.notes.directory_count
+                    "{} notes | {} files",
+                    dashboard.notes.db_note_count, dashboard.notes.file_count,
                 ),
             };
             ListItem::new(vec![
@@ -284,79 +283,98 @@ fn draw_detail_panels<B: tui::backend::Backend>(
     let rows = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(7),
-            Constraint::Min(10),
-            Constraint::Length(7),
+            Constraint::Length(6),
+            Constraint::Min(9),
+            Constraint::Length(6),
         ])
         .split(area);
 
     draw_selected_tool_summary(f, rows[0], selected_tool, dashboard);
 
-    let middle = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(rows[1]);
-
     match selected_tool {
-        AppTool::TaskManager => {
-            draw_recent_panel(
-                f,
-                middle[0],
-                "Recent Tasks",
-                &dashboard.tasks.recent_tasks,
-                Color::Yellow,
-            );
-            draw_paths_panel(
-                f,
-                middle[1],
-                "Task Manager Paths",
-                &[
-                    format!("DB: {}", dashboard.tasks.db_path.display()),
-                    format!("Topics: {}", dashboard.tasks.topic_count),
-                    format!("Favourites: {}", dashboard.tasks.favourite_count),
-                ],
-            );
-        }
+        AppTool::TaskManager => draw_recent_panel(
+            f,
+            rows[1],
+            "Recent Tasks",
+            &dashboard.tasks.recent_tasks,
+            Color::Yellow,
+        ),
         AppTool::Notes => {
+            let middle = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+                .split(rows[1]);
             draw_recent_panel(
                 f,
                 middle[0],
-                "Recent DB Notes",
+                "Recent Notes",
                 &dashboard.notes.recent_notes,
                 Color::Cyan,
             );
             draw_recent_panel(
                 f,
                 middle[1],
-                "Recent Note Files",
+                "Recent Files",
                 &dashboard.notes.recent_files,
                 Color::Green,
             );
         }
     }
 
+    let support = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(rows[2]);
+
     match selected_tool {
-        AppTool::TaskManager => draw_notes_snapshot(
-            f,
-            rows[2],
-            &[
-                format!(
-                    "Notes companion: {} files across {} directories",
-                    dashboard.notes.file_count, dashboard.notes.directory_count
-                ),
-                format!("Notes DB path: {}", dashboard.notes.db_path.display()),
-                format!("Notes root: {}", dashboard.notes.notes_root.display()),
-            ],
-        ),
-        AppTool::Notes => draw_notes_snapshot(
-            f,
-            rows[2],
-            &[
-                format!("Notes DB path: {}", dashboard.notes.db_path.display()),
-                format!("Notes root: {}", dashboard.notes.notes_root.display()),
-                format!("Task backlog: {} open tasks", dashboard.tasks.open_count),
-            ],
-        ),
+        AppTool::TaskManager => {
+            draw_paths_panel(
+                f,
+                support[0],
+                "Task Paths",
+                &[
+                    format!("DB: {}", compact_path(&dashboard.tasks.db_path, 22)),
+                    format!("Topics: {}", dashboard.tasks.topic_count),
+                    format!("Favourites: {}", dashboard.tasks.favourite_count),
+                ],
+            );
+            draw_notes_snapshot(
+                f,
+                support[1],
+                &[
+                    format!(
+                        "Notes: {} files / {} dirs",
+                        dashboard.notes.file_count, dashboard.notes.directory_count
+                    ),
+                    format!("DB: {}", compact_path(&dashboard.notes.db_path, 22)),
+                    format!("Root: {}", compact_path(&dashboard.notes.notes_root, 20)),
+                ],
+            );
+        }
+        AppTool::Notes => {
+            draw_notes_snapshot(
+                f,
+                support[0],
+                &[
+                    format!("Notes DB: {}", compact_path(&dashboard.notes.db_path, 22)),
+                    format!(
+                        "Notes root: {}",
+                        compact_path(&dashboard.notes.notes_root, 18)
+                    ),
+                    format!("DB notes: {}", dashboard.notes.db_note_count),
+                ],
+            );
+            draw_paths_panel(
+                f,
+                support[1],
+                "Task Context",
+                &[
+                    format!("Open tasks: {}", dashboard.tasks.open_count),
+                    format!("Completed: {}", dashboard.tasks.done_count),
+                    format!("Favourites: {}", dashboard.tasks.favourite_count),
+                ],
+            );
+        }
     }
 }
 
@@ -391,7 +409,7 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
                     Span::raw(dashboard.tasks.favourite_count.to_string()),
                 ]),
                 Spans::from(Span::styled(
-                    "Use this when you want a focused execution queue with topic-level structure.",
+                    "Focused execution queue with topic-level structure.",
                     ui_style::body_style(),
                 )),
             ],
@@ -421,7 +439,7 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
                     Span::raw(dashboard.notes.recent_notes.len().to_string()),
                 ]),
                 Spans::from(Span::styled(
-                    "Use this when you want file-first navigation, markdown editing, and linked references.",
+                    "File-first navigation, markdown editing, linked references.",
                     ui_style::body_style(),
                 )),
             ],
@@ -507,7 +525,7 @@ fn draw_footer<B: tui::backend::Backend>(f: &mut tui::Frame<B>, area: Rect) {
             ("q", "quit"),
         ]),
         Spans::from(Span::styled(
-            "This homepage is read-only. Launch into a tool to edit data.",
+            "Homepage is read-only. Launch a tool to edit data.",
             ui_style::muted_style(),
         )),
     ])
@@ -673,6 +691,10 @@ fn compact_text(text: &str, max_chars: usize) -> String {
         .take(max_chars.saturating_sub(1))
         .collect::<String>()
         + "…"
+}
+
+fn compact_path(path: &Path, max_chars: usize) -> String {
+    compact_text(&path.display().to_string(), max_chars)
 }
 
 fn path_to_str(path: &Path) -> Result<&str, io::Error> {
