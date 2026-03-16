@@ -8,6 +8,9 @@ pub enum Accent {
     Primary,
     Tasks,
     Notes,
+    LeadershipPeople,
+    Delegation,
+    Decisions,
 }
 
 #[derive(Clone, Copy)]
@@ -24,6 +27,9 @@ pub fn accent_color(accent: Accent) -> Color {
         Accent::Primary => Color::LightYellow,
         Accent::Tasks => Color::LightYellow,
         Accent::Notes => Color::LightCyan,
+        Accent::LeadershipPeople => Color::LightGreen,
+        Accent::Delegation => Color::LightBlue,
+        Accent::Decisions => Color::LightMagenta,
     }
 }
 

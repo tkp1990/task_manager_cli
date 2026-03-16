@@ -29,7 +29,7 @@ This file tracks in-progress changes so the session can resume cleanly after int
 - Added preset-related app support and wiring in task manager and notes app modules.
 
 ### In Progress
-- Real-terminal validation is complete; remaining work is optional final polish.
+- Added EM-oriented tools; next work is feature depth and UX refinement inside those tools.
 
 ### Last Known Resume Point
 - Task manager popup styling pass is applied.
@@ -37,7 +37,8 @@ This file tracks in-progress changes so the session can resume cleanly after int
 - Remaining refactor cleanup is applied.
 - Real-terminal validation at 80 columns is complete.
 - Homepage density pass is now applied.
-- Next step is optional: add screenshots/release notes or do any purely aesthetic tweaks.
+- Three new EM tools are now scaffolded and wired into the launcher.
+- Next step is to deepen those tools with richer workflows, filters, and linked context.
 
 ### Verification Status
 - `cargo check` was attempted earlier but was blocked by sandbox restrictions at that time.
@@ -88,6 +89,22 @@ This file tracks in-progress changes so the session can resume cleanly after int
   - kept one primary recent-activity panel instead of multiple competing middle panels
   - shortened summary copy further so the launcher reads more cleanly at terminal width
   - validated the updated homepage in a live terminal session
+- EM tools milestone:
+  - added a shared JSON-backed leadership tools engine in:
+    - [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs)
+    - [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs)
+    - [src/leadership_tools/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/mod.rs)
+  - added three new tools:
+    - `1:1 Manager`
+    - `Delegation Tracker`
+    - `Decision Log`
+  - wired the new tools into:
+    - [src/main.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/main.rs)
+    - [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs)
+    - [src/ui_style.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/ui_style.rs)
+  - implemented JSON persistence, dashboard snapshots, add/edit/delete flows, and tool-specific status cycling for delegation and decision tools
+  - validated live launch and screen rendering for the new `1:1 Manager`
+  - `cargo check` passes cleanly after the new-tool integration
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:

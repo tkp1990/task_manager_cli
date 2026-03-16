@@ -1,6 +1,7 @@
 pub mod db;
 mod filter_presets;
 mod homepage;
+mod leadership_tools;
 mod log_config;
 mod notes;
 mod task_manager;

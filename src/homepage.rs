@@ -15,6 +15,9 @@ use tui::Terminal;
 use crate::db::notes::models::Note;
 use crate::db::schema::{note, task, topic};
 use crate::db::task_manager::models::{Task, Topic};
+use crate::leadership_tools::{
+    load_dashboard_snapshot, DashboardSnapshot, ToolKind as LeadershipTool,
+};
 use crate::ui_style::{self, Accent};
 
 /// Enum representing a tool available from the homepage.
@@ -22,6 +25,9 @@ use crate::ui_style::{self, Accent};
 pub enum AppTool {
     TaskManager,
     Notes,
+    OneOnOneManager,
+    DelegationTracker,
+    DecisionLog,
 }
 
 impl AppTool {
@@ -29,6 +35,9 @@ impl AppTool {
         match self {
             AppTool::TaskManager => "Task Manager",
             AppTool::Notes => "Notes",
+            AppTool::OneOnOneManager => "1:1 Manager",
+            AppTool::DelegationTracker => "Delegation Tracker",
+            AppTool::DecisionLog => "Decision Log",
         }
     }
 
@@ -36,6 +45,9 @@ impl AppTool {
         match self {
             AppTool::TaskManager => "Tasks, topics, favourites.",
             AppTool::Notes => "Files, markdown, links.",
+            AppTool::OneOnOneManager => "People, agenda, follow-ups.",
+            AppTool::DelegationTracker => "Owners, status, due dates.",
+            AppTool::DecisionLog => "Decisions, rationale, impact.",
         }
     }
 
@@ -43,6 +55,9 @@ impl AppTool {
         match self {
             AppTool::TaskManager => ui_style::accent_color(Accent::Tasks),
             AppTool::Notes => ui_style::accent_color(Accent::Notes),
+            AppTool::OneOnOneManager => ui_style::accent_color(Accent::LeadershipPeople),
+            AppTool::DelegationTracker => ui_style::accent_color(Accent::Delegation),
+            AppTool::DecisionLog => ui_style::accent_color(Accent::Decisions),
         }
     }
 
@@ -53,6 +68,15 @@ impl AppTool {
         match self {
             AppTool::TaskManager => crate::task_manager::run_task_manager(terminal),
             AppTool::Notes => crate::notes::run_notes_app(terminal),
+            AppTool::OneOnOneManager => {
+                crate::leadership_tools::run_tool(LeadershipTool::OneOnOne, terminal)
+            }
+            AppTool::DelegationTracker => {
+                crate::leadership_tools::run_tool(LeadershipTool::Delegation, terminal)
+            }
+            AppTool::DecisionLog => {
+                crate::leadership_tools::run_tool(LeadershipTool::Decision, terminal)
+            }
         }
     }
 }
@@ -83,6 +107,9 @@ struct NotesDashboard {
 struct HomepageDashboard {
     tasks: TaskDashboard,
     notes: NotesDashboard,
+    one_on_ones: DashboardSnapshot,
+    delegations: DashboardSnapshot,
+    decisions: DashboardSnapshot,
     refreshed_at: String,
 }
 
@@ -97,7 +124,13 @@ struct FileScanSummary {
 pub fn run_homepage(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
 ) -> Result<(), Box<dyn Error>> {
-    let tools = [AppTool::TaskManager, AppTool::Notes];
+    let tools = [
+        AppTool::TaskManager,
+        AppTool::Notes,
+        AppTool::OneOnOneManager,
+        AppTool::DelegationTracker,
+        AppTool::DecisionLog,
+    ];
     let mut selected = 0;
     let mut error_message: Option<String> = None;
     let mut dashboard = load_dashboard().unwrap_or_else(|err| {
@@ -196,7 +229,13 @@ fn draw_header<B: tui::backend::Backend>(
             ui_style::info_style(),
         )),
         Spans::from(Span::styled(
-            format!("Refreshed: {}", dashboard.refreshed_at),
+            format!(
+                "EM Tools: {} records | Refreshed: {}",
+                dashboard.one_on_ones.count
+                    + dashboard.delegations.count
+                    + dashboard.decisions.count,
+                dashboard.refreshed_at
+            ),
             ui_style::muted_style(),
         )),
         Spans::from(Span::styled(
@@ -249,6 +288,18 @@ fn draw_tool_launcher<B: tui::backend::Backend>(
                 AppTool::Notes => format!(
                     "{} notes | {} files",
                     dashboard.notes.db_note_count, dashboard.notes.file_count,
+                ),
+                AppTool::OneOnOneManager => format!(
+                    "{} 1:1s | {} scheduled",
+                    dashboard.one_on_ones.count, dashboard.one_on_ones.stat_a_value
+                ),
+                AppTool::DelegationTracker => format!(
+                    "{} items | {} open",
+                    dashboard.delegations.count, dashboard.delegations.stat_a_value
+                ),
+                AppTool::DecisionLog => format!(
+                    "{} decisions | {} decided",
+                    dashboard.decisions.count, dashboard.decisions.stat_a_value
                 ),
             };
             ListItem::new(vec![
@@ -319,6 +370,27 @@ fn draw_detail_panels<B: tui::backend::Backend>(
                 Color::Green,
             );
         }
+        AppTool::OneOnOneManager => draw_recent_panel(
+            f,
+            rows[1],
+            "Recent 1:1s",
+            &dashboard.one_on_ones.recent_items,
+            ui_style::accent_color(Accent::LeadershipPeople),
+        ),
+        AppTool::DelegationTracker => draw_recent_panel(
+            f,
+            rows[1],
+            "Recent Delegations",
+            &dashboard.delegations.recent_items,
+            ui_style::accent_color(Accent::Delegation),
+        ),
+        AppTool::DecisionLog => draw_recent_panel(
+            f,
+            rows[1],
+            "Recent Decisions",
+            &dashboard.decisions.recent_items,
+            ui_style::accent_color(Accent::Decisions),
+        ),
     }
 
     let support = Layout::default()
@@ -372,6 +444,96 @@ fn draw_detail_panels<B: tui::backend::Backend>(
                     format!("Open tasks: {}", dashboard.tasks.open_count),
                     format!("Completed: {}", dashboard.tasks.done_count),
                     format!("Favourites: {}", dashboard.tasks.favourite_count),
+                ],
+            );
+        }
+        AppTool::OneOnOneManager => {
+            draw_paths_panel(
+                f,
+                support[0],
+                "1:1 Metrics",
+                &[
+                    format!(
+                        "{}: {}",
+                        dashboard.one_on_ones.stat_a_label, dashboard.one_on_ones.stat_a_value
+                    ),
+                    format!(
+                        "{}: {}",
+                        dashboard.one_on_ones.stat_b_label, dashboard.one_on_ones.stat_b_value
+                    ),
+                    format!(
+                        "Store: {}",
+                        compact_path(&dashboard.one_on_ones.store_path, 20)
+                    ),
+                ],
+            );
+            draw_notes_snapshot(
+                f,
+                support[1],
+                &[
+                    format!("Task backlog: {}", dashboard.tasks.open_count),
+                    format!("Notes files: {}", dashboard.notes.file_count),
+                    "Use for prep, follow-ups, and private reminders.".to_string(),
+                ],
+            );
+        }
+        AppTool::DelegationTracker => {
+            draw_paths_panel(
+                f,
+                support[0],
+                "Delegation Metrics",
+                &[
+                    format!(
+                        "{}: {}",
+                        dashboard.delegations.stat_a_label, dashboard.delegations.stat_a_value
+                    ),
+                    format!(
+                        "{}: {}",
+                        dashboard.delegations.stat_b_label, dashboard.delegations.stat_b_value
+                    ),
+                    format!(
+                        "Store: {}",
+                        compact_path(&dashboard.delegations.store_path, 20)
+                    ),
+                ],
+            );
+            draw_notes_snapshot(
+                f,
+                support[1],
+                &[
+                    format!("Task backlog: {}", dashboard.tasks.open_count),
+                    format!("Recent notes: {}", dashboard.notes.recent_notes.len()),
+                    "Use for follow-through and owner accountability.".to_string(),
+                ],
+            );
+        }
+        AppTool::DecisionLog => {
+            draw_paths_panel(
+                f,
+                support[0],
+                "Decision Metrics",
+                &[
+                    format!(
+                        "{}: {}",
+                        dashboard.decisions.stat_a_label, dashboard.decisions.stat_a_value
+                    ),
+                    format!(
+                        "{}: {}",
+                        dashboard.decisions.stat_b_label, dashboard.decisions.stat_b_value
+                    ),
+                    format!(
+                        "Store: {}",
+                        compact_path(&dashboard.decisions.store_path, 20)
+                    ),
+                ],
+            );
+            draw_notes_snapshot(
+                f,
+                support[1],
+                &[
+                    format!("Task backlog: {}", dashboard.tasks.open_count),
+                    format!("Notes DB: {}", dashboard.notes.db_note_count),
+                    "Use for rationale, impact, and later review.".to_string(),
                 ],
             );
         }
@@ -444,6 +606,87 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
                 )),
             ],
             Accent::Notes,
+        ),
+        AppTool::OneOnOneManager => (
+            "1:1 Snapshot",
+            vec![
+                Spans::from(vec![
+                    Span::styled("Total: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.one_on_ones.count.to_string(),
+                        ui_style::title_style(Accent::LeadershipPeople),
+                    ),
+                    Span::raw("    "),
+                    Span::styled("Scheduled: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.one_on_ones.stat_a_value.to_string(),
+                        ui_style::success_style(),
+                    ),
+                ]),
+                Spans::from(vec![
+                    Span::styled("Follow-Ups: ", ui_style::muted_style()),
+                    Span::raw(dashboard.one_on_ones.stat_b_value.to_string()),
+                ]),
+                Spans::from(Span::styled(
+                    "Track people context, prep, and commitments.",
+                    ui_style::body_style(),
+                )),
+            ],
+            Accent::LeadershipPeople,
+        ),
+        AppTool::DelegationTracker => (
+            "Delegation Snapshot",
+            vec![
+                Spans::from(vec![
+                    Span::styled("Total: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.delegations.count.to_string(),
+                        ui_style::title_style(Accent::Delegation),
+                    ),
+                    Span::raw("    "),
+                    Span::styled("Open: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.delegations.stat_a_value.to_string(),
+                        ui_style::warning_style(),
+                    ),
+                ]),
+                Spans::from(vec![
+                    Span::styled("Blocked: ", ui_style::muted_style()),
+                    Span::raw(dashboard.delegations.stat_b_value.to_string()),
+                ]),
+                Spans::from(Span::styled(
+                    "Track delegated work, ownership, and follow-through.",
+                    ui_style::body_style(),
+                )),
+            ],
+            Accent::Delegation,
+        ),
+        AppTool::DecisionLog => (
+            "Decision Snapshot",
+            vec![
+                Spans::from(vec![
+                    Span::styled("Total: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.decisions.count.to_string(),
+                        ui_style::title_style(Accent::Decisions),
+                    ),
+                    Span::raw("    "),
+                    Span::styled("Decided: ", ui_style::muted_style()),
+                    Span::styled(
+                        dashboard.decisions.stat_a_value.to_string(),
+                        ui_style::success_style(),
+                    ),
+                ]),
+                Spans::from(vec![
+                    Span::styled("Proposed: ", ui_style::muted_style()),
+                    Span::raw(dashboard.decisions.stat_b_value.to_string()),
+                ]),
+                Spans::from(Span::styled(
+                    "Capture rationale, impact, and later reference.",
+                    ui_style::body_style(),
+                )),
+            ],
+            Accent::Decisions,
         ),
     };
 
@@ -538,6 +781,9 @@ fn load_dashboard() -> Result<HomepageDashboard, Box<dyn Error>> {
     Ok(HomepageDashboard {
         tasks: load_task_dashboard()?,
         notes: load_notes_dashboard()?,
+        one_on_ones: load_dashboard_snapshot(LeadershipTool::OneOnOne)?,
+        delegations: load_dashboard_snapshot(LeadershipTool::Delegation)?,
+        decisions: load_dashboard_snapshot(LeadershipTool::Decision)?,
         refreshed_at: chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
     })
 }
