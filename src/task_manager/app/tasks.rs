@@ -108,7 +108,7 @@ impl App {
             false
         } else {
             let name = &self.topics[self.selected_topic].name;
-            name == "Favourites" || name == "Default"
+            name == "Favourites" || name == "Completed"
         }
     }
 

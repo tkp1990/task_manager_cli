@@ -317,6 +317,15 @@ This file tracks in-progress changes so the session can resume cleanly after int
     - `cargo check` passes cleanly
     - `cargo test notes::app -- --nocapture` passes with 33 notes app tests green
   - next likely step remains a live-terminal regression sweep across homepage, task manager, notes, and leadership tools
+- Full verification sweep:
+  - fixed task-manager special-topic logic in [src/task_manager/app/tasks.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/tasks.rs) so `Default` is treated as a regular topic and `Completed` remains special
+  - updated the task-manager unit test in [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs) to cover special-topic behavior directly instead of depending on filtered topic ordering
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes with 49 tests green
+    - live PTY smoke pass succeeded for homepage launcher, task manager, notes, `1:1 Manager`, `Delegation Tracker`, and `Decision Log`
+  - remaining gap:
+    - interactive smoke validation confirms app entry/exit/render paths, but not every deep manual workflow in every popup/form
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:

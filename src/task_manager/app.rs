@@ -11,6 +11,7 @@ pub use types::{App, InputMode};
 #[cfg(test)]
 mod tests {
     use super::{App, InputMode};
+    use crate::db::task_manager::models::Topic;
     use std::path::PathBuf;
 
     fn temp_db_path(prefix: &str) -> PathBuf {
@@ -32,7 +33,14 @@ mod tests {
         let db_path_str = db_path.to_string_lossy().to_string();
         let mut app = App::new(&db_path_str)?;
 
-        app.selected_topic = 0;
+        app.topics.push(Topic {
+            id: -1,
+            name: "Favourites".to_string(),
+            description: String::new(),
+            created_at: String::new(),
+            updated_at: String::new(),
+        });
+        app.selected_topic = app.topics.len() - 1;
         app.begin_add_task();
 
         assert_eq!(app.input_mode, InputMode::Normal);
