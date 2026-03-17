@@ -6,10 +6,13 @@ mod presets;
 mod types;
 pub use helpers::format_file_size;
 use helpers::*;
+use std::time::Duration;
 pub use types::{
     App, FileEntry, FileMetadata, FileShortcutKind, FileTemplate, InputMode, NoteReference,
     NotesView, RelatedFileLink, SavedFileShortcut, TemplateDefinition,
 };
+
+pub(crate) const AUTOSAVE_IDLE_DELAY: Duration = Duration::from_millis(1200);
 
 #[cfg(test)]
 mod tests {
@@ -17,6 +20,7 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::{Duration, Instant};
     use std::time::{SystemTime, UNIX_EPOCH};
 
     static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -195,6 +199,67 @@ tags:\n\
 
         let _ = fs::remove_file(db_path);
         let _ = fs::remove_dir_all(notes_root);
+        Ok(())
+    }
+
+    #[test]
+    fn inline_file_editor_autosaves_without_leaving_edit_mode(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let db_path = temp_db_path("inline_autosave");
+        let notes_root = temp_notes_root("inline_autosave");
+        fs::create_dir_all(&notes_root)?;
+        let file_path = notes_root.join("draft.md");
+        fs::write(&file_path, b"# Draft\n")?;
+
+        let db_path_str = db_path.to_string_lossy().to_string();
+        let mut app = App::new_with_notes_root(&db_path_str, notes_root.clone())?;
+        app.select_file_entry_path(&file_path);
+        app.begin_inline_file_edit()?;
+        app.insert_file_edit_char('X');
+        app.file_edit_last_change_at = Some(Instant::now() - Duration::from_secs(2));
+
+        app.maybe_autosave_inline_file_edit()?;
+
+        assert_eq!(app.input_mode, InputMode::EditingFile);
+        assert_eq!(fs::read_to_string(&file_path)?, "# DraftX");
+        assert!(!app.file_edit_dirty);
+        assert!(app
+            .file_edit_message
+            .as_deref()
+            .unwrap_or_default()
+            .contains("Autosaved"));
+
+        let _ = fs::remove_file(db_path);
+        let _ = fs::remove_dir_all(notes_root);
+        Ok(())
+    }
+
+    #[test]
+    fn editing_note_autosaves_after_idle() -> Result<(), Box<dyn std::error::Error>> {
+        let db_path = temp_db_path("note_autosave");
+        let db_path_str = db_path.to_string_lossy().to_string();
+        let mut app = test_app(&db_path_str, "note_autosave")?;
+
+        app.add_note("Weekly Sync", "Initial notes")?;
+        app.begin_edit_note();
+        app.title_input = "Weekly Sync Updated".to_string();
+        app.content_input = "Updated content".to_string();
+        app.note_form_dirty = true;
+        app.note_form_last_change_at = Some(Instant::now() - Duration::from_secs(2));
+
+        app.maybe_autosave_note_edit()?;
+
+        assert_eq!(app.input_mode, InputMode::EditingNote);
+        assert_eq!(app.notes[0].title, "Weekly Sync Updated");
+        assert_eq!(app.notes[0].content, "Updated content");
+        assert!(!app.note_form_dirty);
+        assert!(app
+            .note_form_message
+            .as_deref()
+            .unwrap_or_default()
+            .contains("Autosaved"));
+
+        let _ = fs::remove_file(db_path);
         Ok(())
     }
 }

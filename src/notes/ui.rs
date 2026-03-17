@@ -11,7 +11,7 @@ pub fn run<B: Backend>(
     app: &mut App,
     terminal: &mut Terminal<B>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    crate::common::tui::run_event_loop(
+    crate::common::tui::run_event_loop_with_tick(
         terminal,
         app,
         |f, app| draw::draw_ui(f, app),
@@ -22,5 +22,6 @@ pub fn run<B: Backend>(
                 UiAction::Exit => true,
             })
         },
+        |app| app.maybe_autosave(),
     )
 }

@@ -492,6 +492,7 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
                 } else {
                     app.content_input.push(c);
                 }
+                app.mark_note_form_dirty();
             }
             KeyCode::Backspace => {
                 app.clear_note_form_message();
@@ -500,6 +501,7 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
                 } else {
                     app.content_input.pop();
                 }
+                app.mark_note_form_dirty();
             }
             _ => {}
         },

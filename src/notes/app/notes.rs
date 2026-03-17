@@ -1,9 +1,9 @@
 use chrono::Local;
-use std::{error::Error, io};
+use std::{error::Error, io, time::Instant};
 
 use crate::db::notes::models::{Note, NoteUpdate};
 
-use super::{App, InputMode};
+use super::{App, InputMode, AUTOSAVE_IDLE_DELAY};
 
 impl App {
     pub fn add_note(&mut self, title: &str, content: &str) -> Result<(), Box<dyn Error>> {
@@ -57,6 +57,8 @@ impl App {
         self.title_input.clear();
         self.content_input.clear();
         self.note_form_message = None;
+        self.note_form_dirty = false;
+        self.note_form_last_change_at = None;
         self.editing_title = true;
     }
 
@@ -224,6 +226,16 @@ impl App {
         self.note_form_message = Some(message.into());
     }
 
+    pub fn mark_note_form_dirty(&mut self) {
+        if matches!(
+            self.input_mode,
+            InputMode::AddingNote | InputMode::EditingNote
+        ) {
+            self.note_form_dirty = true;
+            self.note_form_last_change_at = Some(Instant::now());
+        }
+    }
+
     pub fn begin_add_note(&mut self) {
         self.reset_inputs();
         self.input_mode = InputMode::AddingNote;
@@ -238,6 +250,8 @@ impl App {
         if let Some(note) = self.notes.get(self.selected) {
             self.title_input = note.title.clone();
             self.content_input = note.content.clone();
+            self.note_form_dirty = false;
+            self.note_form_last_change_at = None;
             self.editing_title = true;
             self.input_mode = InputMode::EditingNote;
         } else {
@@ -251,5 +265,36 @@ impl App {
             return;
         }
         self.input_mode = InputMode::DeleteNote;
+    }
+
+    pub fn maybe_autosave_note_edit(&mut self) -> Result<(), Box<dyn Error>> {
+        if self.input_mode != InputMode::EditingNote || !self.note_form_dirty {
+            return Ok(());
+        }
+
+        let Some(last_change) = self.note_form_last_change_at else {
+            return Ok(());
+        };
+        if last_change.elapsed() < AUTOSAVE_IDLE_DELAY {
+            return Ok(());
+        }
+
+        let Some(note_id) = self.notes.get(self.selected).map(|note| note.id) else {
+            return Ok(());
+        };
+
+        let title = self.title_input.clone();
+        let content = self.content_input.clone();
+        self.update_note(note_id, &title, &content)?;
+        self.note_form_dirty = false;
+        self.note_form_last_change_at = None;
+        self.note_form_message = Some(format!("Autosaved at {}", Local::now().format("%H:%M:%S")));
+        Ok(())
+    }
+
+    pub fn maybe_autosave(&mut self) -> Result<(), Box<dyn Error>> {
+        self.maybe_autosave_note_edit()?;
+        self.maybe_autosave_inline_file_edit()?;
+        Ok(())
     }
 }

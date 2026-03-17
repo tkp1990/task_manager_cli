@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::time::Instant;
 
 use crate::db::notes::models::Note;
 use crate::db::notes::operations::DbOperations;
@@ -176,6 +177,10 @@ pub struct App {
     pub file_edit_scroll_x: usize,
     /// Preferred column preserved while moving vertically.
     pub file_edit_preferred_col: usize,
+    /// Whether the inline file editor has unsaved changes.
+    pub file_edit_dirty: bool,
+    /// Time of the last inline file edit change.
+    pub file_edit_last_change_at: Option<Instant>,
     /// Current filter query for the visible note list.
     pub note_filter: String,
     /// Current selected preset in the presets popup.
@@ -204,6 +209,10 @@ pub struct App {
     pub content_input: String,
     /// Inline feedback shown inside the note form popup.
     pub note_form_message: Option<String>,
+    /// Whether the current note form has unsaved changes.
+    pub note_form_dirty: bool,
+    /// Time of the last note form change.
+    pub note_form_last_change_at: Option<Instant>,
     /// Buffer for naming a saved preset.
     pub preset_name_input: String,
     /// Inline feedback shown inside the preset popup.

@@ -5,13 +5,14 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
     process::Command,
+    time::Instant,
 };
 
 use super::{
     char_to_byte_idx, copy_path_recursive, extract_note_references, fuzzy_matches, line_count,
     load_custom_templates, parse_file_metadata, render_preview_content, save_file_shortcuts,
     shell_quote, App, FileEntry, FileMetadata, FileShortcutKind, FileTemplate, InputMode,
-    NoteReference, RelatedFileLink, SavedFileShortcut, TemplateDefinition,
+    NoteReference, RelatedFileLink, SavedFileShortcut, TemplateDefinition, AUTOSAVE_IDLE_DELAY,
 };
 
 impl App {
@@ -159,24 +160,14 @@ impl App {
         self.file_edit_preferred_col = self.file_edit_cursor_col;
         self.file_edit_scroll = self.file_edit_cursor_row.saturating_sub(3);
         self.file_edit_scroll_x = self.file_edit_cursor_col.saturating_sub(20);
+        self.file_edit_dirty = false;
+        self.file_edit_last_change_at = None;
         self.input_mode = InputMode::EditingFile;
         Ok(())
     }
 
     pub fn save_inline_file_edit(&mut self) -> Result<(), Box<dyn Error>> {
-        let Some(path) = self.viewed_file_path.clone() else {
-            return Err(io::Error::new(io::ErrorKind::NotFound, "No file is open").into());
-        };
-        fs::write(&path, self.file_edit_content.as_bytes())?;
-        self.load_file_entries()?;
-        self.select_entry_path(&path);
-        self.viewed_file_content = self.file_edit_content.clone();
-        self.previewed_file_path = Some(path.clone());
-        self.previewed_file_content = render_preview_content(&path, &self.file_edit_content);
-        self.file_edit_message = Some("Saved".to_string());
-        self.add_log("INFO", &format!("Saved file: {}", path.display()));
-        self.input_mode = InputMode::ViewingFile;
-        Ok(())
+        self.persist_inline_file_edit(false)
     }
 
     pub fn cancel_inline_file_edit(&mut self) {
@@ -187,7 +178,54 @@ impl App {
         self.file_edit_scroll = 0;
         self.file_edit_scroll_x = 0;
         self.file_edit_preferred_col = 0;
+        self.file_edit_dirty = false;
+        self.file_edit_last_change_at = None;
         self.input_mode = InputMode::ViewingFile;
+    }
+
+    fn persist_inline_file_edit(&mut self, keep_editing: bool) -> Result<(), Box<dyn Error>> {
+        let Some(path) = self.viewed_file_path.clone() else {
+            return Err(io::Error::new(io::ErrorKind::NotFound, "No file is open").into());
+        };
+        fs::write(&path, self.file_edit_content.as_bytes())?;
+        self.load_file_entries()?;
+        self.select_entry_path(&path);
+        self.viewed_file_content = self.file_edit_content.clone();
+        self.previewed_file_path = Some(path.clone());
+        self.previewed_file_content = render_preview_content(&path, &self.file_edit_content);
+        self.file_edit_dirty = false;
+        self.file_edit_last_change_at = None;
+        if keep_editing {
+            self.file_edit_message =
+                Some(format!("Autosaved at {}", Local::now().format("%H:%M:%S")));
+        } else {
+            self.file_edit_message = Some("Saved".to_string());
+            self.input_mode = InputMode::ViewingFile;
+        }
+        self.add_log(
+            "INFO",
+            &format!(
+                "{} file: {}",
+                if keep_editing { "Autosaved" } else { "Saved" },
+                path.display()
+            ),
+        );
+        Ok(())
+    }
+
+    pub fn maybe_autosave_inline_file_edit(&mut self) -> Result<(), Box<dyn Error>> {
+        if self.input_mode != InputMode::EditingFile || !self.file_edit_dirty {
+            return Ok(());
+        }
+
+        let Some(last_change) = self.file_edit_last_change_at else {
+            return Ok(());
+        };
+        if last_change.elapsed() < AUTOSAVE_IDLE_DELAY {
+            return Ok(());
+        }
+
+        self.persist_inline_file_edit(true)
     }
 
     pub fn inline_editor_lines(&self) -> Vec<String> {
@@ -278,6 +316,8 @@ impl App {
         self.file_edit_preferred_col = self.file_edit_cursor_col;
         self.file_edit_content = lines.join("\n");
         self.file_edit_message = None;
+        self.file_edit_dirty = true;
+        self.file_edit_last_change_at = Some(Instant::now());
     }
 
     pub fn insert_file_edit_newline(&mut self) {
@@ -296,6 +336,8 @@ impl App {
         self.file_edit_preferred_col = 0;
         self.file_edit_content = lines.join("\n");
         self.file_edit_message = None;
+        self.file_edit_dirty = true;
+        self.file_edit_last_change_at = Some(Instant::now());
     }
 
     pub fn insert_file_edit_tab(&mut self) {
@@ -330,6 +372,8 @@ impl App {
 
         self.file_edit_content = lines.join("\n");
         self.file_edit_message = None;
+        self.file_edit_dirty = true;
+        self.file_edit_last_change_at = Some(Instant::now());
     }
 
     fn editor_lines(&self) -> Vec<String> {

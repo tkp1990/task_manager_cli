@@ -5,18 +5,20 @@ use std::{
 };
 use tui::{backend::Backend, Frame, Terminal};
 
-pub fn run_event_loop<B, State, Action, Draw, Handle, Process>(
+pub fn run_event_loop_with_tick<B, State, Action, Draw, Handle, Process, Tick>(
     terminal: &mut Terminal<B>,
     state: &mut State,
     mut draw: Draw,
     mut handle_key: Handle,
     mut process_action: Process,
+    mut on_tick: Tick,
 ) -> Result<(), Box<dyn Error>>
 where
     B: Backend,
     Draw: FnMut(&mut Frame<B>, &mut State),
     Handle: FnMut(&mut State, KeyEvent) -> Result<Action, Box<dyn Error>>,
     Process: FnMut(Action, &mut State, &mut Terminal<B>) -> Result<bool, Box<dyn Error>>,
+    Tick: FnMut(&mut State) -> Result<(), Box<dyn Error>>,
 {
     let tick_rate = Duration::from_millis(250);
     let mut last_tick = Instant::now();
@@ -39,9 +41,33 @@ where
         }
 
         if last_tick.elapsed() >= tick_rate {
+            on_tick(state)?;
             last_tick = Instant::now();
         }
     }
 
     Ok(())
+}
+
+pub fn run_event_loop<B, State, Action, Draw, Handle, Process>(
+    terminal: &mut Terminal<B>,
+    state: &mut State,
+    draw: Draw,
+    handle_key: Handle,
+    process_action: Process,
+) -> Result<(), Box<dyn Error>>
+where
+    B: Backend,
+    Draw: FnMut(&mut Frame<B>, &mut State),
+    Handle: FnMut(&mut State, KeyEvent) -> Result<Action, Box<dyn Error>>,
+    Process: FnMut(Action, &mut State, &mut Terminal<B>) -> Result<bool, Box<dyn Error>>,
+{
+    run_event_loop_with_tick(
+        terminal,
+        state,
+        draw,
+        handle_key,
+        process_action,
+        |_| Ok(()),
+    )
 }

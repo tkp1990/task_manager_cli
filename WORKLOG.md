@@ -469,3 +469,25 @@ This file tracks in-progress changes so the session can resume cleanly after int
     - `cargo test` passes cleanly
   - remains:
     - optional follow-up is a broader audit if we later add more vim-style navigation bindings outside normal/list modes
+
+- Notes autosave pass:
+  - added debounced autosave for existing Notes edits and inline file edits
+  - existing DB note edits now autosave after a short idle period while staying in edit mode
+  - inline file editor now autosaves after a short idle period while staying in the editor
+  - added a tick-capable shared TUI event loop helper so Notes can autosave without blocking input
+  - updated Notes editor copy to surface autosave behavior
+  - changed files:
+    - [src/common/tui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/tui.rs)
+    - [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs)
+    - [src/notes/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/draw.rs)
+    - [src/notes/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/events.rs)
+    - [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs)
+    - [src/notes/app/core.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/core.rs)
+    - [src/notes/app/types.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/types.rs)
+    - [src/notes/app/notes.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/notes.rs)
+    - [src/notes/app/files.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/files.rs)
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes cleanly
+  - remains:
+    - new-note creation still uses explicit save, not draft autosave, which is intentional for now

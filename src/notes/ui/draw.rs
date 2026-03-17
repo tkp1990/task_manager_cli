@@ -818,8 +818,9 @@ fn draw_edit_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         );
     }
 
-    let instructions =
-        Paragraph::new("Enter title and content. Press Enter to save, Esc to cancel.")
+    let instructions = Paragraph::new(
+        "Enter title and content. Existing notes autosave while editing. Press Enter to save, Esc to cancel.",
+    )
             .style(ui_style::info_style())
             .block(ui_style::popup_block("Instructions", Accent::Notes));
     f.render_widget(instructions, popup_layout[4]);
@@ -1165,7 +1166,7 @@ fn draw_inline_file_editor<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Re
 
     let feedback = Paragraph::new(app.file_edit_message.clone().unwrap_or_else(|| {
         format!(
-            "Ln {}, Col {} | Top {} | Ctrl+S save, Esc cancel.",
+            "Ln {}, Col {} | Top {} | Autosaves after idle, Ctrl+S saves, Esc cancels.",
             app.file_edit_cursor_row + 1,
             app.file_edit_cursor_col + 1,
             app.file_edit_scroll + 1
