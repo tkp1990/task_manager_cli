@@ -268,12 +268,12 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
                 app.command_palette_query.pop();
                 app.command_palette_selected = 0;
             }
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up => {
                 if app.command_palette_selected > 0 {
                     app.command_palette_selected -= 1;
                 }
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down => {
                 let visible = visible_task_palette_commands(app);
                 if app.command_palette_selected + 1 < visible.len() {
                     app.command_palette_selected += 1;
@@ -571,4 +571,49 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
     }
 
     Ok(UiAction::Continue)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::handle_key;
+    use crate::task_manager::app::{App, InputMode};
+    use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_db_path(prefix: &str) -> PathBuf {
+        let unique = format!(
+            "{}_{}_{}",
+            prefix,
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock before unix epoch")
+                .as_nanos()
+        );
+        std::env::temp_dir().join(format!("task_manager_cli_task_ui_{unique}.db"))
+    }
+
+    #[test]
+    fn command_palette_treats_j_and_k_as_query_text() -> Result<(), Box<dyn std::error::Error>> {
+        let db_path = temp_db_path("palette_jk");
+        let db_path_str = db_path.to_string_lossy().to_string();
+        let mut app = App::new(&db_path_str)?;
+        app.begin_command_palette();
+
+        handle_key(
+            &mut app,
+            KeyEvent::new(KeyCode::Char('j'), KeyModifiers::NONE),
+        )?;
+        handle_key(
+            &mut app,
+            KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE),
+        )?;
+
+        assert_eq!(app.input_mode, InputMode::CommandPalette);
+        assert_eq!(app.command_palette_query, "jk");
+
+        let _ = std::fs::remove_file(db_path);
+        Ok(())
+    }
 }

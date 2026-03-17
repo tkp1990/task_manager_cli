@@ -331,12 +331,12 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
                 app.command_palette_query.pop();
                 app.command_palette_selected = 0;
             }
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up => {
                 if app.command_palette_selected > 0 {
                     app.command_palette_selected -= 1;
                 }
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down => {
                 let visible = visible_notes_palette_commands(app);
                 if app.command_palette_selected + 1 < visible.len() {
                     app.command_palette_selected += 1;
@@ -360,8 +360,8 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
             }
             KeyCode::Enter => app.input_mode = InputMode::Normal,
             KeyCode::Backspace => app.pop_file_search_char(),
-            KeyCode::Down | KeyCode::Char('j') => app.move_file_selection_down(),
-            KeyCode::Up | KeyCode::Char('k') => app.move_file_selection_up(),
+            KeyCode::Down => app.move_file_selection_down(),
+            KeyCode::Up => app.move_file_selection_up(),
             KeyCode::Char(c) => app.append_file_search_char(c),
             _ => {}
         },
@@ -605,12 +605,12 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
                 app.clear_file_form_message();
                 app.file_name_input.pop();
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down => {
                 if app.input_mode == InputMode::CreatingFile {
                     app.move_file_template_down();
                 }
             }
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up => {
                 if app.input_mode == InputMode::CreatingFile {
                     app.move_file_template_up();
                 }
@@ -651,4 +651,71 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn std:
     }
 
     Ok(UiAction::Continue)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::handle_key;
+    use crate::notes::app::{App, InputMode};
+    use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+    use std::fs;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+    fn temp_db_path(prefix: &str) -> PathBuf {
+        let unique = format!(
+            "{}_{}_{}",
+            prefix,
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock before unix epoch")
+                .as_nanos()
+        );
+        std::env::temp_dir().join(format!("task_manager_cli_notes_ui_{unique}.db"))
+    }
+
+    fn temp_notes_root(prefix: &str) -> PathBuf {
+        let unique = format!(
+            "{}_{}_{}_{}",
+            prefix,
+            std::process::id(),
+            TEMP_COUNTER.fetch_add(1, Ordering::Relaxed),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("system clock before unix epoch")
+                .as_nanos()
+        );
+        std::env::temp_dir().join(format!("task_manager_cli_notes_ui_files_{unique}"))
+    }
+
+    #[test]
+    fn create_directory_mode_treats_j_and_k_as_text() -> Result<(), Box<dyn std::error::Error>> {
+        let db_path = temp_db_path("dir_input_jk");
+        let notes_root = temp_notes_root("dir_input_jk");
+        fs::create_dir_all(&notes_root)?;
+
+        let db_path_str = db_path.to_string_lossy().to_string();
+        let mut app = App::new_with_notes_root(&db_path_str, notes_root.clone())?;
+        app.begin_create_directory();
+
+        handle_key(
+            &mut app,
+            KeyEvent::new(KeyCode::Char('j'), KeyModifiers::NONE),
+        )?;
+        handle_key(
+            &mut app,
+            KeyEvent::new(KeyCode::Char('k'), KeyModifiers::NONE),
+        )?;
+
+        assert_eq!(app.input_mode, InputMode::CreatingDirectory);
+        assert_eq!(app.file_name_input, "jk");
+
+        let _ = fs::remove_file(db_path);
+        let _ = fs::remove_dir_all(notes_root);
+        Ok(())
+    }
 }

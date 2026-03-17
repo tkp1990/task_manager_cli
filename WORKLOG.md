@@ -455,3 +455,17 @@ This file tracks in-progress changes so the session can resume cleanly after int
   - which files changed
   - whether build/test verification was run
   - what remains next
+
+- Notes text-entry navigation fix:
+  - fixed Notes file-action popups so `j` and `k` are inserted as text instead of being consumed as navigation while entering file or directory names
+  - also fixed command palette query entry in Notes and Task Manager so `j`/`k` are treated as typed characters; only arrow keys navigate in those text-entry modes
+  - changed files:
+    - [src/notes/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/events.rs)
+    - [src/task_manager/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/events.rs)
+  - added regression tests for both paths:
+    - Notes create-directory input accepts `j`/`k`
+    - Task Manager command palette query accepts `j`/`k`
+  - verification:
+    - `cargo test` passes cleanly
+  - remains:
+    - optional follow-up is a broader audit if we later add more vim-style navigation bindings outside normal/list modes
