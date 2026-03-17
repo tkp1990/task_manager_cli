@@ -232,6 +232,18 @@ This file tracks in-progress changes so the session can resume cleanly after int
   - validated the expanded 1:1 layout and command bar in a live PTY session with a temporary sync fixture
   - removed the temporary fixture after validation
   - `cargo check` passes cleanly after the leadership-sync expansion
+- Leadership module refactor:
+  - split the oversized leadership tools model layer into focused submodules under [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs):
+    - [src/leadership_tools/app/types.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app/types.rs)
+    - [src/leadership_tools/app/helpers.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app/helpers.rs)
+    - [src/leadership_tools/app/storage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app/storage.rs)
+  - split the oversized leadership tools UI layer into focused submodules under [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs):
+    - [src/leadership_tools/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui/events.rs)
+    - [src/leadership_tools/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui/draw.rs)
+  - left behavior unchanged while reducing the responsibility of the root files:
+    - `app.rs` now focuses on app behavior and tool rules
+    - `ui.rs` now focuses on run-loop orchestration
+  - `cargo check` passes cleanly after the module split
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:
