@@ -491,3 +491,16 @@ This file tracks in-progress changes so the session can resume cleanly after int
     - `cargo test` passes cleanly
   - remains:
     - new-note creation still uses explicit save, not draft autosave, which is intentional for now
+
+- README refresh:
+  - rewrote [README.md](/Users/kenneth.thomas/Workspace/task_manager_cli/README.md) to reflect the current app instead of the original 2-tool early-stage description
+  - updated sections for:
+    - current toolset and feature scope
+    - run/configuration
+    - controls and development commands
+    - test structure and project layout
+    - realistic current-state summary
+  - verification:
+    - `cargo check` passes cleanly
+  - remains:
+    - optional future polish is adding screenshots or a short animated terminal demo

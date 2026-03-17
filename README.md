@@ -1,89 +1,156 @@
-# task_manager_cli
+# Task Manager CLI
 
-Terminal-based personal productivity app written in Rust. It currently includes two tools behind a simple launcher:
+Terminal-first personal operations workspace written in Rust.
 
-- `Task Manager`: topic-based task tracking with favourites, completion state, and log output
-- `Notes`: lightweight note creation, editing, viewing, and deletion
+This app has grown past a simple task tracker. It now provides a launcher-driven TUI with:
+
+- `Task Manager` for topic-based task tracking
+- `Notes` for DB notes plus file-backed markdown notes
+- `1:1 Manager` for leadership syncs, follow-ups, and action extraction
+- `Delegation Tracker` for delegated work, reminders, and due dates
+- `Decision Log` for decisions, rationale, reviews, and linked records
+
+## What It Does
+
+### Homepage
+
+- launcher for all tools
+- dashboard snapshots for tasks, notes, and leadership records
+- recent activity and lightweight workspace context
+
+### Task Manager
+
+- topic-based task organization
+- favourites and completed/special-task views
+- filter presets and command palette
+- focused handoff into linked task records
+
+### Notes
+
+- two note systems in one tool:
+  - SQLite-backed notes
+  - file-backed markdown notes under a notes root
+- file browser with create, rename, move, copy, delete
+- markdown preview and inline editor
+- related links and backlinks
+- daily-note and template support
+- autosave for existing note edits and inline file edits
+
+### Leadership Tools
+
+- `1:1 Manager`
+  - direct, skip-level, upward, and peer sync tracking
+  - cadence, purpose, team/org, manager chain, action items
+- `Delegation Tracker`
+  - owners, status, due dates, follow-up dates, reminders
+- `Decision Log`
+  - decision status, rationale, impact, tags, review dates
+  - linked notes and linked tasks
 
 ## Stack
 
 - Rust 2021
-- `tui` + `crossterm` for the terminal UI
-- SQLite with Diesel and embedded migrations
-- `slog` for terminal and JSON file logging
+- `tui` + `crossterm`
+- SQLite via Diesel and embedded migrations
+- `serde` / JSON for presets and lightweight tool state
+- `slog` for terminal and file logging
 
-## Running
-
-1. Ensure Rust is installed.
-2. From the project root, run:
+## Run
 
 ```bash
 cargo run
 ```
 
-The app reads `.env` at startup. Current task-manager settings are:
+The app loads `.env` automatically if present.
+
+## Configuration
+
+Task Manager DB:
 
 ```env
 TASK_MANAGER_DB_DIR=.task_manager
 TASK_MANAGER_DB_FILENAME=task_manager.db
 ```
 
-The notes app falls back to these defaults if not set:
+Notes DB and file root:
 
 ```env
 NOTES_DB_DIR=.notes
 NOTES_DB_FILENAME=notes.db
+NOTES_ROOT_DIR=.notes/files
 ```
 
-Logs are written to `.logs/app.log`.
+Useful runtime environment:
+
+```env
+RUST_LOG=info
+```
+
+Default generated data locations:
+
+- tasks DB: `.task_manager/`
+- notes DB: `.notes/`
+- notes files: `.notes/files/`
+- logs: `.logs/app.log`
 
 ## Controls
 
-### Homepage
+The app is intentionally keyboard-first. Common patterns:
 
-- `Up` / `Down`: move between tools
-- `Enter`: launch selected tool
-- `q`: quit
+- `Enter` opens or confirms
+- `q` backs out of a tool or quits from the homepage
+- `:` opens the command palette where supported
+- `/` starts filtering/search where supported
+- arrow keys always work for navigation
 
-### Task Manager
+Some tools also support vim-style movement in navigation modes. Text-entry modes use typed characters normally.
 
-- `j` / `k` or arrow keys: move through tasks
-- `h` / `l` or arrow keys: switch topics
-- `a`: add task
-- `e`: edit selected task description
-- `d`: delete selected task
-- `t`: toggle completion
-- `f`: toggle favourite
-- `N`: add topic
-- `X`: delete current topic when allowed
-- `W`: open favourites/completed popup
-- `H`: toggle help
-- `q`: return to homepage
+## Development
 
-### Notes
-
-- `j` / `k` or arrow keys: move through notes
-- `a`: add note
-- `e`: edit selected note
-- `d`: delete selected note
-- `Enter`: view selected note
-- `H`: open help
-- `q`: return to homepage
-
-## Current State
-
-The repo is functional but still early-stage:
-
-- the core TUI flows compile and run
-- persistence is local-only through SQLite files in the repo directory
-- there is no automated test coverage yet
-- the project is still evolving, especially around the notes feature
-
-## Cleanup Baseline
-
-Useful commands while working on the repo:
+Useful commands:
 
 ```bash
-cargo fmt
+cargo check
 cargo test
+cargo fmt
 ```
+
+## Tests
+
+The project uses both inline unit tests and top-level integration tests.
+
+- inline unit tests live under `src/...`
+- integration tests live under [tests](/Users/kenneth.thomas/Workspace/task_manager_cli/tests)
+
+Current coverage includes:
+
+- DB lifecycle
+- task-manager form and filter behavior
+- notes file browser, templates, links, filters, and editor flows
+- command palette behavior
+- autosave and input-mode regressions
+
+## Project Layout
+
+High-level structure:
+
+- [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) and `src/homepage/`
+- [src/task_manager](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager)
+- [src/notes](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes)
+- [src/leadership_tools](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools)
+- [src/common](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common) for shared palette, TUI, logging, and popup utilities
+
+## Current Status
+
+The app is actively evolving, but it is no longer just an early scaffold.
+
+Current baseline:
+
+- launcher and tool switching are working
+- local persistence is working
+- test suite is in place and exercised regularly
+- leadership and notes workflows are materially functional
+
+Main current limitation:
+
+- persistence is local-first and single-user; there is no sync or multi-user model
