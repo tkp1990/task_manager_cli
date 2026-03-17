@@ -1,3 +1,9 @@
 /target
-.task_manager
-.logs
+
+# Ignore local dotfiles and dot-directories by default.
+/.*
+
+# Keep repo-managed git metadata/config committed.
+!/.gitignore
+!/.github/
+!/.github/**
