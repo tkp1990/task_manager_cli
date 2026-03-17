@@ -1,10 +1,9 @@
-use chrono::Local;
 use std::{collections::HashSet, error::Error, path::PathBuf};
 
 use crate::db::task_manager::operations::DbOperations;
 use crate::filter_presets::load_presets;
 
-use super::{load_palette_history, save_palette_history, App, InputMode};
+use super::{load_palette_history, App, InputMode};
 
 impl App {
     pub fn new(db_path: &str) -> Result<App, Box<dyn Error>> {
@@ -112,10 +111,7 @@ impl App {
     }
 
     pub fn add_log(&mut self, level: &str, msg: &str) {
-        let now = Local::now();
-        let entry = format!("{} [{}] {}", now.format("%Y-%m-%d %H:%M:%S"), level, msg);
-        self.logs.push(entry);
-        self.log_offset = 0;
+        crate::common::logs::push_timestamped_log(&mut self.logs, &mut self.log_offset, level, msg);
     }
 
     pub fn add_topic<T: AsRef<str>>(&mut self, name: T) -> Result<(), Box<dyn Error>> {
@@ -160,27 +156,30 @@ impl App {
     }
 
     pub fn begin_command_palette(&mut self) {
-        self.command_palette_query.clear();
-        self.command_palette_selected = 0;
-        self.command_palette_return_mode = self.input_mode;
-        self.input_mode = InputMode::CommandPalette;
+        crate::common::palette::begin_palette(
+            &mut self.command_palette_query,
+            &mut self.command_palette_selected,
+            &mut self.command_palette_return_mode,
+            &mut self.input_mode,
+            InputMode::CommandPalette,
+        );
     }
 
     pub fn close_command_palette(&mut self) {
-        self.command_palette_query.clear();
-        self.command_palette_selected = 0;
-        self.input_mode = self.command_palette_return_mode;
+        crate::common::palette::close_palette(
+            &mut self.command_palette_query,
+            &mut self.command_palette_selected,
+            self.command_palette_return_mode,
+            &mut self.input_mode,
+        );
     }
 
     pub fn record_palette_command(&mut self, command_id: &str) -> Result<(), Box<dyn Error>> {
-        self.recent_palette_commands
-            .retain(|item| item != command_id);
-        self.recent_palette_commands
-            .insert(0, command_id.to_string());
-        self.recent_palette_commands.truncate(8);
-        save_palette_history(
+        crate::common::palette::record_recent_command(
             &self.palette_history_store_path,
-            &self.recent_palette_commands,
+            &mut self.recent_palette_commands,
+            command_id,
+            8,
         )?;
         Ok(())
     }

@@ -1,3 +1,5 @@
+use crate::common::command_palette;
+use crate::common::widgets;
 use crate::task_manager::app::{App, InputMode};
 use crate::ui_style::{self, Accent, PopupSize};
 use tui::{
@@ -423,71 +425,15 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_command_palette_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
-    let popup_area = ui_style::popup_rect(PopupSize::Wide, size);
-    f.render_widget(Clear, popup_area);
-
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Min(8),
-            Constraint::Length(3),
-        ])
-        .split(popup_area);
-
-    let input = Paragraph::new(app.command_palette_query.as_str())
-        .style(ui_style::body_style())
-        .block(ui_style::popup_block("Command Palette", Accent::Tasks));
-    f.render_widget(input, layout[0]);
-    f.set_cursor(
-        layout[0].x + app.command_palette_query.len() as u16 + 1,
-        layout[0].y + 1,
-    );
-
     let commands = visible_task_palette_commands(app);
-    let items: Vec<ListItem> = if commands.is_empty() {
-        vec![ListItem::new(vec![Spans::from(Span::styled(
-            "No matching commands.",
-            ui_style::muted_style(),
-        ))])]
-    } else {
-        commands
-            .iter()
-            .map(|command| {
-                ListItem::new(vec![
-                    Spans::from(vec![
-                        Span::styled(command.group, ui_style::muted_style()),
-                        Span::raw("  "),
-                        Span::styled(command.label, ui_style::title_style(Accent::Tasks)),
-                        Span::raw("  "),
-                        Span::styled(command.shortcut, ui_style::info_style()),
-                    ]),
-                    Spans::from(Span::styled(command.description, ui_style::muted_style())),
-                ])
-            })
-            .collect()
-    };
-
-    let list = List::new(items)
-        .block(ui_style::popup_block("Matches", Accent::Tasks))
-        .highlight_style(ui_style::selected_style())
-        .highlight_symbol("=> ");
-    let mut state = ListState::default();
-    if !commands.is_empty() {
-        state.select(Some(app.command_palette_selected.min(commands.len() - 1)));
-    }
-    f.render_stateful_widget(list, layout[1], &mut state);
-
-    let footer = Paragraph::new(vec![
-        ui_style::command_bar_spans(&[("Enter", "run"), ("j/k", "move"), ("Esc", "close")]),
-        Spans::from(Span::styled(
-            "Recent commands rank first when the query is empty or ambiguous.",
-            ui_style::muted_style(),
-        )),
-    ])
-    .style(ui_style::info_style())
-    .block(ui_style::popup_block("Palette Controls", Accent::Tasks));
-    f.render_widget(footer, layout[2]);
+    command_palette::draw_popup(
+        f,
+        size,
+        app.command_palette_query.as_str(),
+        app.command_palette_selected,
+        &commands,
+        Accent::Tasks,
+    );
 }
 
 fn draw_add_task_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -601,45 +547,20 @@ fn draw_add_task_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_delete_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    let size = f.size();
-    let delete_popup_area = ui_style::popup_rect(PopupSize::Compact, size);
-    f.render_widget(Clear, delete_popup_area);
-
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-        ])
-        .split(delete_popup_area);
-
-    let popup_title = Paragraph::new("Delete Confirmation")
-        .style(ui_style::title_style(Accent::Tasks))
-        .alignment(tui::layout::Alignment::Center)
-        .block(ui_style::popup_block("Delete Task", Accent::Tasks));
-    f.render_widget(popup_title, popup_layout[0]);
-
     let task_name = if let Some(task) = app.tasks.get(app.selected) {
         &task.name
     } else {
         "Unknown Task"
     };
-
-    let delete_message = Paragraph::new(format!(
-        "Are you sure you want to delete \"{}\"?",
-        task_name
-    ))
-    .style(ui_style::danger_style())
-    .alignment(tui::layout::Alignment::Center)
-    .block(ui_style::popup_block("Confirmation", Accent::Tasks));
-    f.render_widget(delete_message, popup_layout[1]);
-
-    let instructions = Paragraph::new("Press [Y] to confirm deletion or [N] to cancel")
-        .style(ui_style::info_style())
-        .alignment(tui::layout::Alignment::Center)
-        .block(ui_style::popup_block("Controls", Accent::Tasks));
-    f.render_widget(instructions, popup_layout[2]);
+    widgets::draw_confirmation_popup(
+        f,
+        f.size(),
+        Accent::Tasks,
+        "Delete Task",
+        "Delete Confirmation",
+        &format!("Are you sure you want to delete \"{}\"?", task_name),
+        "Press [Y] to confirm deletion or [N] to cancel",
+    );
 }
 
 fn build_help_line(
@@ -886,10 +807,6 @@ fn draw_special_topics_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_task_presets_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, special: bool) {
-    let size = f.size();
-    let popup_area = ui_style::popup_rect(PopupSize::Standard, size);
-    f.render_widget(Clear, popup_area);
-
     let presets = app.all_task_filter_presets();
     let items: Vec<ListItem> = presets
         .iter()
@@ -911,73 +828,47 @@ fn draw_task_presets_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, special:
             ])
         })
         .collect();
-
-    let list = List::new(items)
-        .block(ui_style::popup_block(
-            if special {
-                "Special Task Presets (Enter apply, S save current, x delete saved)"
-            } else {
-                "Task Presets (Enter apply, S save current, x delete saved)"
-            },
-            Accent::Tasks,
-        ))
-        .highlight_style(ui_style::selected_style())
-        .highlight_symbol("=> ");
-
-    let mut state = ListState::default();
-    state.select(Some(app.preset_selected));
-    f.render_stateful_widget(list, popup_area, &mut state);
+    widgets::draw_list_popup(
+        f,
+        f.size(),
+        PopupSize::Standard,
+        Accent::Tasks,
+        if special {
+            "Special Task Presets (Enter apply, S save current, x delete saved)"
+        } else {
+            "Task Presets (Enter apply, S save current, x delete saved)"
+        },
+        items,
+        Some(app.preset_selected),
+    );
 }
 
 fn draw_save_task_preset_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let size = f.size();
-    let popup_area = ui_style::popup_rect(PopupSize::Compact, size);
-    f.render_widget(Clear, popup_area);
-
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-        ])
-        .split(popup_area);
-
-    let title = Paragraph::new(
-        if matches!(app.input_mode, InputMode::SavingSpecialPreset) {
-            "Save Special Task Preset"
-        } else {
-            "Save Task Preset"
-        },
-    )
-    .style(ui_style::title_style(Accent::Tasks))
-    .block(ui_style::popup_block("Preset", Accent::Tasks));
-    f.render_widget(title, layout[0]);
-
-    let input = Paragraph::new(app.preset_name_input.as_str())
-        .style(ui_style::body_style())
-        .block(ui_style::popup_block("Preset Name", Accent::Tasks));
-    f.render_widget(input, layout[1]);
-    f.set_cursor(
-        layout[1].x + app.preset_name_input.len() as u16 + 1,
-        layout[1].y + 1,
-    );
-
     let active_query = if matches!(app.input_mode, InputMode::SavingSpecialPreset) {
         app.special_task_filter.as_str()
     } else {
         app.task_filter.as_str()
     };
-    let feedback = Paragraph::new(
-        app.preset_form_message
-            .clone()
-            .unwrap_or_else(|| format!("Query: {active_query}")),
-    )
-    .style(if app.preset_form_message.is_some() {
-        ui_style::danger_style()
+    let heading = if matches!(app.input_mode, InputMode::SavingSpecialPreset) {
+        "Save Special Task Preset"
     } else {
-        ui_style::subtle_style()
-    })
-    .block(ui_style::popup_block("Feedback", Accent::Tasks));
-    f.render_widget(feedback, layout[2]);
+        "Save Task Preset"
+    };
+    let feedback = app
+        .preset_form_message
+        .clone()
+        .unwrap_or_else(|| format!("Query: {active_query}"));
+    widgets::draw_text_input_popup(
+        f,
+        size,
+        PopupSize::Compact,
+        Accent::Tasks,
+        "Preset",
+        heading,
+        "Preset Name",
+        app.preset_name_input.as_str(),
+        &feedback,
+        app.preset_form_message.is_some(),
+    );
 }

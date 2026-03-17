@@ -1,3 +1,5 @@
+use crate::common::command_palette;
+use crate::common::widgets;
 use crate::notes::app::{App, InputMode, NotesView};
 use crate::ui_style::{self, Accent, PopupSize};
 use tui::{
@@ -377,71 +379,15 @@ pub fn draw_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_command_palette_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
-    let popup_area = ui_style::popup_rect(PopupSize::Wide, size);
-    f.render_widget(Clear, popup_area);
-
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Min(8),
-            Constraint::Length(3),
-        ])
-        .split(popup_area);
-
-    let input = Paragraph::new(app.command_palette_query.as_str())
-        .style(ui_style::body_style())
-        .block(ui_style::popup_block("Command Palette", Accent::Notes));
-    f.render_widget(input, layout[0]);
-    f.set_cursor(
-        layout[0].x + app.command_palette_query.len() as u16 + 1,
-        layout[0].y + 1,
-    );
-
     let commands = visible_notes_palette_commands(app);
-    let items: Vec<ListItem> = if commands.is_empty() {
-        vec![ListItem::new(vec![Spans::from(Span::styled(
-            "No matching commands.",
-            ui_style::muted_style(),
-        ))])]
-    } else {
-        commands
-            .iter()
-            .map(|command| {
-                ListItem::new(vec![
-                    Spans::from(vec![
-                        Span::styled(command.group, ui_style::muted_style()),
-                        Span::raw("  "),
-                        Span::styled(command.label, ui_style::title_style(Accent::Notes)),
-                        Span::raw("  "),
-                        Span::styled(command.shortcut, ui_style::info_style()),
-                    ]),
-                    Spans::from(Span::styled(command.description, ui_style::muted_style())),
-                ])
-            })
-            .collect()
-    };
-
-    let list = List::new(items)
-        .block(ui_style::popup_block("Matches", Accent::Notes))
-        .highlight_style(ui_style::selected_style())
-        .highlight_symbol("=> ");
-    let mut state = ListState::default();
-    if !commands.is_empty() {
-        state.select(Some(app.command_palette_selected.min(commands.len() - 1)));
-    }
-    f.render_stateful_widget(list, layout[1], &mut state);
-
-    let footer = Paragraph::new(vec![
-        ui_style::command_bar_spans(&[("Enter", "run"), ("j/k", "move"), ("Esc", "close")]),
-        Spans::from(Span::styled(
-            "Recent commands rank first when the query is empty or ambiguous.",
-            ui_style::muted_style(),
-        )),
-    ])
-    .style(ui_style::info_style())
-    .block(ui_style::popup_block("Palette Controls", Accent::Notes));
-    f.render_widget(footer, layout[2]);
+    command_palette::draw_popup(
+        f,
+        size,
+        app.command_palette_query.as_str(),
+        app.command_palette_selected,
+        &commands,
+        Accent::Notes,
+    );
 }
 
 fn draw_notes_list<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
@@ -880,44 +826,20 @@ fn draw_edit_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_delete_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
-    let delete_area = ui_style::popup_rect(PopupSize::Compact, size);
-    f.render_widget(Clear, delete_area);
-
-    let delete_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-        ])
-        .split(delete_area);
-
-    let delete_title = Paragraph::new("Delete Confirmation")
-        .style(ui_style::title_style(Accent::Notes))
-        .alignment(tui::layout::Alignment::Center)
-        .block(ui_style::popup_block("Delete Note", Accent::Notes));
-    f.render_widget(delete_title, delete_layout[0]);
-
     let note_name = if let Some(note) = app.notes.get(app.selected) {
         &note.title
     } else {
         "Unknown Note"
     };
-
-    let delete_msg = Paragraph::new(format!(
-        "Are you sure you want to delete \"{}\"?",
-        note_name
-    ))
-    .style(ui_style::danger_style())
-    .alignment(tui::layout::Alignment::Center)
-    .block(ui_style::popup_block("Confirmation", Accent::Notes));
-    f.render_widget(delete_msg, delete_layout[1]);
-
-    let delete_instructions = Paragraph::new("Press [Y] to confirm or [N] to cancel")
-        .style(ui_style::info_style())
-        .alignment(tui::layout::Alignment::Center)
-        .block(ui_style::popup_block("Controls", Accent::Notes));
-    f.render_widget(delete_instructions, delete_layout[2]);
+    widgets::draw_confirmation_popup(
+        f,
+        size,
+        Accent::Notes,
+        "Delete Note",
+        "Delete Confirmation",
+        &format!("Are you sure you want to delete \"{}\"?", note_name),
+        "Press [Y] to confirm or [N] to cancel",
+    );
 }
 
 fn draw_help_popup<B: Backend>(f: &mut Frame<B>, size: Rect) {
@@ -994,9 +916,6 @@ fn draw_help_popup<B: Backend>(f: &mut Frame<B>, size: Rect) {
 }
 
 fn draw_note_presets_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
-    let popup_area = ui_style::popup_rect(PopupSize::Standard, size);
-    f.render_widget(Clear, popup_area);
-
     let presets = app.all_note_filter_presets();
     let items: Vec<ListItem> = presets
         .iter()
@@ -1018,59 +937,34 @@ fn draw_note_presets_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Re
             ])
         })
         .collect();
-
-    let list = List::new(items)
-        .block(ui_style::popup_block(
-            "Note Presets (Enter apply, S save current, x delete saved)",
-            Accent::Notes,
-        ))
-        .highlight_style(ui_style::selected_style())
-        .highlight_symbol("=> ");
-
-    let mut state = ListState::default();
-    state.select(Some(app.preset_selected));
-    f.render_stateful_widget(list, popup_area, &mut state);
+    widgets::draw_list_popup(
+        f,
+        size,
+        PopupSize::Standard,
+        Accent::Notes,
+        "Note Presets (Enter apply, S save current, x delete saved)",
+        items,
+        Some(app.preset_selected),
+    );
 }
 
 fn draw_save_preset_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
-    let popup_area = ui_style::popup_rect(PopupSize::Compact, size);
-    f.render_widget(Clear, popup_area);
-
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-        ])
-        .split(popup_area);
-
-    let title = Paragraph::new("Save Note Filter Preset")
-        .style(ui_style::title_style(Accent::Notes))
-        .block(ui_style::popup_block("Preset", Accent::Notes));
-    f.render_widget(title, layout[0]);
-
-    let input = Paragraph::new(app.preset_name_input.as_str())
-        .style(ui_style::body_style())
-        .block(ui_style::popup_block("Preset Name", Accent::Notes));
-    f.render_widget(input, layout[1]);
-    f.set_cursor(
-        layout[1].x + app.preset_name_input.len() as u16 + 1,
-        layout[1].y + 1,
+    let feedback = app
+        .preset_form_message
+        .clone()
+        .unwrap_or_else(|| format!("Query: {}", app.note_filter));
+    widgets::draw_text_input_popup(
+        f,
+        size,
+        PopupSize::Compact,
+        Accent::Notes,
+        "Preset",
+        "Save Note Filter Preset",
+        "Preset Name",
+        app.preset_name_input.as_str(),
+        &feedback,
+        app.preset_form_message.is_some(),
     );
-
-    let feedback = Paragraph::new(
-        app.preset_form_message
-            .clone()
-            .unwrap_or_else(|| format!("Query: {}", app.note_filter)),
-    )
-    .style(if app.preset_form_message.is_some() {
-        ui_style::danger_style()
-    } else {
-        ui_style::subtle_style()
-    })
-    .block(ui_style::popup_block("Feedback", Accent::Notes));
-    f.render_widget(feedback, layout[2]);
 }
 
 fn draw_create_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
@@ -1185,24 +1079,6 @@ fn draw_create_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
 }
 
 fn draw_delete_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rect) {
-    let popup_area = ui_style::popup_rect(PopupSize::Compact, size);
-    f.render_widget(Clear, popup_area);
-
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(4),
-            Constraint::Length(3),
-        ])
-        .split(popup_area);
-
-    let title = Paragraph::new("Delete File Entry")
-        .style(ui_style::title_style(Accent::Notes))
-        .alignment(tui::layout::Alignment::Center)
-        .block(ui_style::popup_block("Delete Entry", Accent::Notes));
-    f.render_widget(title, layout[0]);
-
     let target = app
         .pending_file_path
         .as_ref()
@@ -1212,19 +1088,15 @@ fn draw_delete_file_popup<B: Backend>(f: &mut Frame<B>, app: &mut App, size: Rec
                 .unwrap_or_else(|_| path.display().to_string())
         })
         .unwrap_or_else(|| "Unknown entry".to_string());
-    let message = Paragraph::new(format!(
-        "Delete {target}?\nDirectories are removed recursively."
-    ))
-    .style(ui_style::danger_style())
-    .alignment(tui::layout::Alignment::Center)
-    .block(ui_style::popup_block("Confirmation", Accent::Notes));
-    f.render_widget(message, layout[1]);
-
-    let instructions = Paragraph::new("Press [Y] to confirm or [N] to cancel")
-        .style(ui_style::info_style())
-        .alignment(tui::layout::Alignment::Center)
-        .block(ui_style::popup_block("Controls", Accent::Notes));
-    f.render_widget(instructions, layout[2]);
+    widgets::draw_confirmation_popup(
+        f,
+        size,
+        Accent::Notes,
+        "Delete Entry",
+        "Delete File Entry",
+        &format!("Delete {target}?\nDirectories are removed recursively."),
+        "Press [Y] to confirm or [N] to cancel",
+    );
 }
 
 fn draw_inline_file_editor<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {

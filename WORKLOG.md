@@ -326,6 +326,116 @@ This file tracks in-progress changes so the session can resume cleanly after int
     - live PTY smoke pass succeeded for homepage launcher, task manager, notes, `1:1 Manager`, `Delegation Tracker`, and `Decision Log`
   - remaining gap:
     - interactive smoke validation confirms app entry/exit/render paths, but not every deep manual workflow in every popup/form
+- Shared infrastructure extraction:
+  - added [src/common/palette.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/palette.rs) for shared command-palette persistence and state transitions
+  - added [src/common/logs.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/logs.rs) for shared timestamped app logging
+  - added [src/common/tui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/tui.rs) for the shared terminal event loop used by the main TUI surfaces
+  - wired notes and task manager app layers onto the shared palette/log helpers:
+    - [src/notes/app/core.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/core.rs)
+    - [src/task_manager/app/core.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/core.rs)
+    - [src/notes/app/helpers.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/helpers.rs)
+    - [src/task_manager/app/helpers.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/helpers.rs)
+  - wired the shared run loop into:
+    - [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs)
+    - [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs)
+    - [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs)
+  - intentionally did not over-extract `InputMode`, app state, or homepage/dashboard logic, since those abstractions are still app-specific
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes with 49 tests green
+  - next likely cleanup target is shared command-palette rendering/filter helpers between notes and task manager, followed by shared popup/form widgets where the structure is truly duplicated
+- Shared command-palette extraction:
+  - added [src/common/command_palette.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/command_palette.rs) for shared palette command metadata, filtering/sorting, and popup rendering
+  - rewired notes and task manager palette visibility logic to the shared helper:
+    - [src/notes/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/events.rs)
+    - [src/task_manager/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/events.rs)
+  - rewired notes and task manager command-palette popups to the shared renderer:
+    - [src/notes/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/draw.rs)
+    - [src/task_manager/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/draw.rs)
+  - kept app-specific command lists and execution handlers local, since those still differ materially by tool
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes with 49 tests green
+  - next likely cleanup target is shared popup/form widgets for common confirmation and single-input modal patterns
+- Shared popup/widget extraction:
+  - added [src/common/widgets.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/widgets.rs) for shared confirmation popups and simple text-input popups
+  - rewired confirmation dialogs to the shared widget in:
+    - [src/notes/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/draw.rs)
+    - [src/task_manager/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/draw.rs)
+    - [src/leadership_tools/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui/draw.rs)
+  - rewired preset-name dialogs to the shared text-input widget in:
+    - [src/notes/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/draw.rs)
+    - [src/task_manager/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/draw.rs)
+  - intentionally left multi-field note/task/file forms local, since their layout and cursor behavior still differ materially by tool
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes with 49 tests green
+  - next likely cleanup target is shared list-popup helpers for preset pickers and related-record popups, if we want one more pass without over-abstracting the UI layer
+- Shared list-popup extraction:
+  - expanded [src/common/widgets.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/common/widgets.rs) with a shared stateful list-popup shell
+  - rewired preset picker popups to the shared list widget in:
+    - [src/notes/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/draw.rs)
+    - [src/task_manager/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/draw.rs)
+  - rewired leadership linked-record browsing to the shared list widget in [src/leadership_tools/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui/draw.rs)
+  - kept per-tool row content local so each app still controls its own item formatting and semantics
+  - also fixed a parallel-test isolation issue in [src/db/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/db/mod.rs) by giving the notes lifecycle test a unique temp notes root instead of a shared temp directory
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes with 49 tests green
+  - next likely cleanup target is either stopping here before over-abstracting the UI, or doing one very selective pass on shared help-line builders / repeated empty-state list items
+- Test structure pass:
+  - added [src/lib.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/lib.rs) so the project exposes a proper library target for integration tests, and simplified [src/main.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/main.rs) to call `task_manager_cli::run()`
+  - added a shared integration-test helper module at [tests/common/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/common/mod.rs) for temp DB and notes-root setup
+  - moved DB lifecycle tests out of [src/db/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/db/mod.rs) into:
+    - [tests/db.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/db.rs)
+    - [tests/db/app_lifecycle.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/db/app_lifecycle.rs)
+  - moved task-manager app integration-style tests out of [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs) into:
+    - [tests/task_manager.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/task_manager.rs)
+    - [tests/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/task_manager/app.rs)
+  - intentionally left the larger notes test block inline for now, because many of those tests still depend on module-local helpers or exercise behavior that is closer to unit/private-module coverage than external integration coverage
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes cleanly with inline unit tests plus the new `tests/` targets
+  - next likely step, if we want to continue, is a second-stage notes test migration: move only the clearly public workflow tests into `tests/notes/` and leave helper/parser/private-behavior tests inline
+- Notes test migration:
+  - added [tests/notes.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes.rs) and [tests/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes/app.rs) for notes integration-style workflow coverage
+  - moved public/workflow-oriented notes tests out of [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs), including:
+    - note filtering and presets
+    - file browser CRUD and search
+    - template loading/rendering
+    - file metadata, links, backlinks, and related-link navigation
+    - daily note creation
+    - external editor and preview/view refresh behavior
+    - command-palette round-trip behavior
+  - kept only clearly unit-like notes tests inline in [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs):
+    - input reset/form-state behavior
+    - `parse_file_metadata`
+    - inline editor cursor/backspace/scroll internals
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes cleanly
+    - current split is now:
+      - inline unit tests in `src`
+      - integration-style tests in `tests/db/`, `tests/task_manager/`, and `tests/notes/`
+  - next likely step is optional cleanup only: organize the integration test tree further by domain files (`filters.rs`, `files.rs`, `templates.rs`) if we want even more JVM/Rails-style grouping
+- Integration test tree cleanup:
+  - split [tests/notes.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes.rs) into domain modules:
+    - [tests/notes/notes.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes/notes.rs)
+    - [tests/notes/filters.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes/filters.rs)
+    - [tests/notes/files.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes/files.rs)
+    - [tests/notes/templates.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes/templates.rs)
+    - [tests/notes/links.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/notes/links.rs)
+  - split [tests/task_manager.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/task_manager.rs) into domain modules:
+    - [tests/task_manager/forms.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/task_manager/forms.rs)
+    - [tests/task_manager/filters.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/task_manager/filters.rs)
+    - [tests/task_manager/presets.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/tests/task_manager/presets.rs)
+  - removed the older flat integration files:
+    - `tests/notes/app.rs`
+    - `tests/task_manager/app.rs`
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test` passes cleanly
+  - current test structure is now much closer to a JVM/Rails-style layout while still respecting Rust’s unit-vs-integration split
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:

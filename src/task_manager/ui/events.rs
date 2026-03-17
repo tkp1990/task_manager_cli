@@ -1,15 +1,6 @@
+use crate::common::command_palette::{visible_commands, PaletteCommand};
 use crate::task_manager::app::{App, InputMode};
 use crossterm::event::{KeyCode, KeyEvent};
-
-#[derive(Clone, Copy)]
-pub(crate) struct PaletteCommand {
-    pub(crate) id: &'static str,
-    pub(crate) shortcut: &'static str,
-    pub(crate) group: &'static str,
-    pub(crate) label: &'static str,
-    pub(crate) description: &'static str,
-    pub(crate) keywords: &'static str,
-}
 
 pub enum UiAction {
     Continue,
@@ -18,14 +9,6 @@ pub enum UiAction {
 
 fn log_ui_error(app: &mut App, context: &str, error: &dyn std::error::Error) {
     app.add_log("ERROR", &format!("{context}: {error}"));
-}
-
-fn palette_matches(command: &PaletteCommand, query: &str) -> bool {
-    let trimmed = query.trim().to_lowercase();
-    trimmed.is_empty()
-        || command.label.to_lowercase().contains(&trimmed)
-        || command.description.to_lowercase().contains(&trimmed)
-        || command.keywords.to_lowercase().contains(&trimmed)
 }
 
 fn task_palette_commands(app: &App) -> Vec<PaletteCommand> {
@@ -153,29 +136,11 @@ fn task_palette_commands(app: &App) -> Vec<PaletteCommand> {
 }
 
 pub(crate) fn visible_task_palette_commands(app: &App) -> Vec<PaletteCommand> {
-    let query = app.command_palette_query.trim().to_lowercase();
-    let mut commands = task_palette_commands(app)
-        .into_iter()
-        .filter(|command| palette_matches(command, &app.command_palette_query))
-        .collect::<Vec<_>>();
-    commands.sort_by_key(|command| {
-        let recent_rank = app
-            .recent_palette_commands
-            .iter()
-            .position(|item| item == command.id)
-            .unwrap_or(usize::MAX);
-        let label = command.label.to_lowercase();
-        let keyword_hit = command.keywords.to_lowercase().contains(&query);
-        let prefix = !query.is_empty() && label.starts_with(&query);
-        (
-            recent_rank,
-            !prefix,
-            !keyword_hit,
-            command.group,
-            command.label,
-        )
-    });
-    commands
+    visible_commands(
+        task_palette_commands(app),
+        &app.command_palette_query,
+        &app.recent_palette_commands,
+    )
 }
 
 fn execute_task_palette_command(

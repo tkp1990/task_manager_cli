@@ -4,6 +4,7 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Clear, List, ListItem, ListState, Paragraph, Wrap};
 use tui::Frame;
 
+use crate::common::widgets;
 use crate::leadership_tools::app::{App, InputMode, LinkedRecordKind, ToolKind};
 use crate::ui_style::{self, PopupSize};
 
@@ -341,46 +342,23 @@ fn draw_edit_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 }
 
 fn draw_delete_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    let popup = ui_style::popup_rect(PopupSize::Compact, f.size());
-    f.render_widget(Clear, popup);
-
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Length(3),
-            Constraint::Length(3),
-        ])
-        .split(popup);
-
-    let title = Paragraph::new("Delete Record")
-        .style(ui_style::title_style(app.spec.accent))
-        .block(ui_style::popup_block("Delete", app.spec.accent));
-    f.render_widget(title, layout[0]);
-
-    let message = Paragraph::new(
-        app.selected_record()
-            .and_then(|record| record.values.first().cloned())
-            .map(|value| format!("Delete \"{value}\"?"))
-            .unwrap_or_else(|| "Delete selected record?".to_string()),
-    )
-    .style(ui_style::danger_style())
-    .block(ui_style::popup_block("Confirmation", app.spec.accent));
-    f.render_widget(message, layout[1]);
-
-    let controls = Paragraph::new(vec![ui_style::command_bar_spans(&[
-        ("y", "confirm"),
-        ("n", "cancel"),
-    ])])
-    .style(ui_style::info_style())
-    .block(ui_style::popup_block("Controls", app.spec.accent));
-    f.render_widget(controls, layout[2]);
+    let message = app
+        .selected_record()
+        .and_then(|record| record.values.first().cloned())
+        .map(|value| format!("Delete \"{value}\"?"))
+        .unwrap_or_else(|| "Delete selected record?".to_string());
+    widgets::draw_confirmation_popup(
+        f,
+        f.size(),
+        app.spec.accent,
+        "Delete",
+        "Delete Record",
+        &message,
+        "Press [Y] to confirm or [N] to cancel",
+    );
 }
 
 fn draw_link_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    let popup = ui_style::popup_rect(PopupSize::Wide, f.size());
-    f.render_widget(Clear, popup);
-
     let items = if app.linked_records.is_empty() {
         vec![ListItem::new(Spans::from(Span::styled(
             "No linked records resolved.",
@@ -411,15 +389,17 @@ fn draw_link_popup<B: Backend>(f: &mut Frame<B>, app: &mut App) {
             })
             .collect()
     };
-
-    let list = List::new(items)
-        .block(ui_style::popup_block("Linked Records", app.spec.accent))
-        .highlight_style(ui_style::selected_style())
-        .highlight_symbol("=> ");
-
-    let mut state = ListState::default();
-    if !app.linked_records.is_empty() {
-        state.select(Some(app.linked_record_selected));
-    }
-    f.render_stateful_widget(list, popup, &mut state);
+    widgets::draw_list_popup(
+        f,
+        f.size(),
+        PopupSize::Wide,
+        app.spec.accent,
+        "Linked Records",
+        items,
+        if app.linked_records.is_empty() {
+            None
+        } else {
+            Some(app.linked_record_selected)
+        },
+    );
 }

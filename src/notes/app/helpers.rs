@@ -45,22 +45,7 @@ pub(super) fn save_file_shortcuts(
 }
 
 pub(super) fn load_palette_history(path: &Path) -> Result<Vec<String>, Box<dyn Error>> {
-    if !path.exists() {
-        return Ok(Vec::new());
-    }
-
-    let content = fs::read_to_string(path)?;
-    if content.trim().is_empty() {
-        return Ok(Vec::new());
-    }
-
-    Ok(serde_json::from_str(&content)?)
-}
-
-pub(super) fn save_palette_history(path: &Path, commands: &[String]) -> Result<(), Box<dyn Error>> {
-    let content = serde_json::to_string_pretty(commands)?;
-    fs::write(path, content)?;
-    Ok(())
+    crate::common::palette::load_recent_commands(path)
 }
 
 pub(super) fn load_custom_templates(dir: &Path) -> Result<Vec<TemplateDefinition>, Box<dyn Error>> {
