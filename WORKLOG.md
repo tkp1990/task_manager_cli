@@ -208,6 +208,30 @@ This file tracks in-progress changes so the session can resume cleanly after int
   - validated the task handoff in a live PTY session by opening a linked task from Decision Log into Task Manager
   - removed the temporary decision fixture used for validation
   - `cargo check` passes cleanly after the cross-link workflow upgrade
+- 1:1 leadership-sync expansion:
+  - widened `1:1 Manager` records in [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs) to track:
+    - `Relationship`
+    - `Meeting Type`
+    - `Team / Org`
+    - `Manager / Chain`
+    - `Purpose`
+    - `Action Items`
+  - added backward-compatible normalization for older 5-field and 7-field saved 1:1 records
+  - updated the 1:1 detail pane and list summaries to better represent directs, skip-levels, upward syncs, and peer leadership meetings
+  - expanded 1:1 filtering with:
+    - `relationship:`
+    - `type:`
+    - `team:`
+    - `manager:`
+    - `purpose:`
+    - `actions`
+  - changed 1:1 dashboard metrics to count `action items` instead of only follow-ups
+  - added `x` in [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs) to extract sync action items into Delegation Tracker
+  - updated `complete meeting` so agenda and action items roll into follow-ups when the meeting is closed out
+  - aligned the homepage 1:1 snapshot label in [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) with the new `action items` metric
+  - validated the expanded 1:1 layout and command bar in a live PTY session with a temporary sync fixture
+  - removed the temporary fixture after validation
+  - `cargo check` passes cleanly after the leadership-sync expansion
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:

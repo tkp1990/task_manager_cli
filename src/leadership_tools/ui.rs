@@ -69,6 +69,7 @@ fn handle_key(app: &mut App, key: KeyEvent) -> Result<UiAction, Box<dyn Error>> 
             KeyCode::Char('d') => app.begin_delete(),
             KeyCode::Char('/') => app.begin_filter(),
             KeyCode::Char('o') => app.begin_link_browser()?,
+            KeyCode::Char('x') => app.extract_sync_actions()?,
             KeyCode::Char('m') => app.complete_one_on_one()?,
             KeyCode::Char('r') => app.send_delegation_reminder()?,
             KeyCode::Char('v') => app.schedule_decision_review()?,
@@ -309,9 +310,10 @@ fn draw_commands<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
                     ("m", "complete meeting"),
                 ]);
                 lines.push(ui_style::command_bar_spans(&[
+                    ("x", "extract actions"),
                     ("/", "filter"),
-                    ("q", "back"),
                 ]));
+                lines.push(ui_style::command_bar_spans(&[("q", "back")]));
             }
             lines
         }
@@ -365,8 +367,8 @@ fn filter_help_spans(app: &App) -> Spans<'static> {
         crate::leadership_tools::app::ToolKind::OneOnOne => ui_style::command_bar_spans(&[
             ("Enter", "keep"),
             ("Esc", "clear"),
-            ("person:/date:/cadence:", "tokens"),
-            ("followups", "has action items"),
+            ("person:/relationship:/type:/team:", "tokens"),
+            ("manager:/purpose:/actions", "workflow"),
         ]),
         crate::leadership_tools::app::ToolKind::Delegation => ui_style::command_bar_spans(&[
             ("Enter", "keep"),

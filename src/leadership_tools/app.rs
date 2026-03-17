@@ -108,10 +108,16 @@ impl ToolKind {
                 store_filename: "one_on_ones.json",
                 field_labels: &[
                     "Person",
+                    "Relationship",
+                    "Meeting Type",
+                    "Team / Org",
+                    "Manager / Chain",
                     "Next 1:1",
                     "Cadence",
                     "Last 1:1",
+                    "Purpose",
                     "Agenda",
+                    "Action Items",
                     "Follow-Ups",
                     "Private Notes",
                 ],
@@ -503,6 +509,39 @@ impl App {
         Ok(())
     }
 
+    pub fn extract_sync_actions(&mut self) -> Result<(), Box<dyn Error>> {
+        if !matches!(self.spec.kind, ToolKind::OneOnOne) {
+            return Ok(());
+        }
+
+        let Some(record) = self.records.get_mut(self.selected) else {
+            return Ok(());
+        };
+
+        let mut values = self.spec.normalize_values(&record.values);
+        let actions = parse_action_items(&values[10]);
+        if actions.is_empty() {
+            self.feedback = Some("No action items to extract.".to_string());
+            return Ok(());
+        }
+
+        append_delegations_from_sync(&values[0], &values[3], &values[8], &values[2], &actions)?;
+        values[11] = merge_rollover_items(&values[11], &values[10]);
+        values[10].clear();
+        record.values = values;
+        record.updated_at = timestamp();
+        self.persist()?;
+        self.feedback = Some(format!(
+            "Extracted {} action item(s) into Delegation Tracker.",
+            actions.len()
+        ));
+        self.log(&format!(
+            "Extracted {} action item(s) into Delegation Tracker.",
+            actions.len()
+        ));
+        Ok(())
+    }
+
     pub fn complete_one_on_one(&mut self) -> Result<(), Box<dyn Error>> {
         if !matches!(self.spec.kind, ToolKind::OneOnOne) {
             return Ok(());
@@ -513,14 +552,16 @@ impl App {
         };
 
         let mut values = self.spec.normalize_values(&record.values);
-        let meeting_date = parse_ymd(&values[1]).unwrap_or_else(|| Local::now().date_naive());
-        let cadence = cadence_duration(&values[2]);
+        let meeting_date = parse_ymd(&values[5]).unwrap_or_else(|| Local::now().date_naive());
+        let cadence = cadence_duration(&values[6]);
         let next_date = meeting_date + cadence;
 
-        values[3] = meeting_date.format("%Y-%m-%d").to_string();
-        values[1] = next_date.format("%Y-%m-%d").to_string();
-        values[5] = merge_rollover_items(&values[5], &values[4]);
-        values[4].clear();
+        values[7] = meeting_date.format("%Y-%m-%d").to_string();
+        values[5] = next_date.format("%Y-%m-%d").to_string();
+        values[11] =
+            merge_rollover_items(&values[11], &merge_rollover_items(&values[9], &values[10]));
+        values[9].clear();
+        values[10].clear();
 
         record.values = values;
         record.updated_at = timestamp();
@@ -559,25 +600,31 @@ impl App {
         if matches!(self.spec.kind, ToolKind::OneOnOne) {
             let mut lines = vec![
                 format!("Person: {}", values[0]),
-                format!("Next 1:1: {}", blank_dash(&values[1])),
-                format!("Cadence: {}", blank_dash(&values[2])),
-                format!("Last 1:1: {}", blank_dash(&values[3])),
-                format!("Agenda: {}", blank_dash(&values[4])),
-                format!("Follow-Ups: {}", blank_dash(&values[5])),
+                format!("Relationship: {}", blank_dash(&values[1])),
+                format!("Meeting Type: {}", blank_dash(&values[2])),
+                format!("Team / Org: {}", blank_dash(&values[3])),
+                format!("Manager / Chain: {}", blank_dash(&values[4])),
+                format!("Next 1:1: {}", blank_dash(&values[5])),
+                format!("Cadence: {}", blank_dash(&values[6])),
+                format!("Last 1:1: {}", blank_dash(&values[7])),
+                format!("Purpose: {}", blank_dash(&values[8])),
+                format!("Agenda: {}", blank_dash(&values[9])),
+                format!("Action Items: {}", blank_dash(&values[10])),
+                format!("Follow-Ups: {}", blank_dash(&values[11])),
                 format!(
                     "Agenda Ready: {}",
-                    if values[4].trim().is_empty() {
+                    if values[9].trim().is_empty() && values[10].trim().is_empty() {
                         "No"
                     } else {
                         "Yes"
                     }
                 ),
-                format!("Private Notes: {}", blank_dash(&values[6])),
+                format!("Private Notes: {}", blank_dash(&values[12])),
                 format!("Updated: {}", record.updated_at),
             ];
-            if let Some(next_date) = parse_ymd(&values[1]) {
+            if let Some(next_date) = parse_ymd(&values[5]) {
                 let days_until = (next_date - Local::now().date_naive()).num_days();
-                lines.insert(2, format!("Days Until Next: {days_until}"));
+                lines.insert(5, format!("Days Until Next: {days_until}"));
             }
             return lines;
         }
@@ -678,11 +725,11 @@ impl App {
             return Ok(());
         };
         let mut values = self.spec.normalize_values(&record.values);
-        let cadence = cadence_duration(&values[2]);
-        let next_date = parse_ymd(&values[1])
+        let cadence = cadence_duration(&values[6]);
+        let next_date = parse_ymd(&values[5])
             .map(|date| date + cadence)
             .unwrap_or_else(|| Local::now().date_naive() + cadence);
-        values[1] = next_date.format("%Y-%m-%d").to_string();
+        values[5] = next_date.format("%Y-%m-%d").to_string();
         record.values = values;
         record.updated_at = timestamp();
         self.persist()?;
@@ -744,8 +791,14 @@ impl ToolSpec {
         match self.kind {
             ToolKind::OneOnOne => vec![
                 String::new(),
+                "Direct Report".to_string(),
+                "1:1".to_string(),
+                String::new(),
+                String::new(),
                 Local::now().format("%Y-%m-%d").to_string(),
                 "Weekly".to_string(),
+                String::new(),
+                String::new(),
                 String::new(),
                 String::new(),
                 String::new(),
@@ -779,12 +832,38 @@ impl ToolSpec {
         if matches!(self.kind, ToolKind::OneOnOne) && values.len() == 5 {
             return vec![
                 values.first().cloned().unwrap_or_default(),
+                "Direct Report".to_string(),
+                "1:1".to_string(),
+                String::new(),
+                String::new(),
                 values.get(1).cloned().unwrap_or_default(),
                 "Weekly".to_string(),
                 String::new(),
+                String::new(),
                 values.get(2).cloned().unwrap_or_default(),
+                String::new(),
                 values.get(3).cloned().unwrap_or_default(),
                 values.get(4).cloned().unwrap_or_default(),
+            ];
+        }
+        if matches!(self.kind, ToolKind::OneOnOne) && values.len() == 7 {
+            return vec![
+                values.first().cloned().unwrap_or_default(),
+                "Direct Report".to_string(),
+                "1:1".to_string(),
+                String::new(),
+                String::new(),
+                values.get(1).cloned().unwrap_or_default(),
+                values
+                    .get(2)
+                    .cloned()
+                    .unwrap_or_else(|| "Weekly".to_string()),
+                values.get(3).cloned().unwrap_or_default(),
+                String::new(),
+                values.get(4).cloned().unwrap_or_default(),
+                String::new(),
+                values.get(5).cloned().unwrap_or_default(),
+                values.get(6).cloned().unwrap_or_default(),
             ];
         }
         if matches!(self.kind, ToolKind::Delegation) && values.len() == 5 {
@@ -832,9 +911,9 @@ impl ToolSpec {
         match self.kind {
             ToolKind::OneOnOne => {
                 format!(
-                    "next {} | {} cadence | follow-ups {}",
+                    "{} | {} | next {}",
                     blank_dash(&values[1]),
-                    blank_dash(&values[2]),
+                    blank_dash(&values[3]),
                     blank_dash(&values[5])
                 )
             }
@@ -886,6 +965,22 @@ impl ToolSpec {
                 if !contains_value(values.first(), rest) {
                     return false;
                 }
+            } else if let Some(rest) = token.strip_prefix("relationship:") {
+                if !contains_value(values.get(1), rest) {
+                    return false;
+                }
+            } else if let Some(rest) = token.strip_prefix("type:") {
+                if !contains_value(values.get(2), rest) {
+                    return false;
+                }
+            } else if let Some(rest) = token.strip_prefix("team:") {
+                if !contains_value(values.get(3), rest) {
+                    return false;
+                }
+            } else if let Some(rest) = token.strip_prefix("manager:") {
+                if !contains_value(values.get(4), rest) {
+                    return false;
+                }
             } else if let Some(rest) = token.strip_prefix("owner:") {
                 if !contains_value(values.get(1), rest) {
                     return false;
@@ -911,7 +1006,11 @@ impl ToolSpec {
                     return false;
                 }
             } else if let Some(rest) = token.strip_prefix("cadence:") {
-                if !contains_str(values.get(2).map(|value| value.as_str()), rest) {
+                if !contains_str(values.get(6).map(|value| value.as_str()), rest) {
+                    return false;
+                }
+            } else if let Some(rest) = token.strip_prefix("purpose:") {
+                if !contains_str(values.get(8).map(|value| value.as_str()), rest) {
                     return false;
                 }
             } else if let Some(rest) = token.strip_prefix("due:") {
@@ -936,7 +1035,7 @@ impl ToolSpec {
                 }
             } else if token == "followup" || token == "followups" {
                 let follow_up_index = if matches!(self.kind, ToolKind::OneOnOne) {
-                    5
+                    11
                 } else if matches!(self.kind, ToolKind::Delegation) {
                     4
                 } else {
@@ -944,6 +1043,14 @@ impl ToolSpec {
                 };
                 if values
                     .get(follow_up_index)
+                    .map(|value| value.trim().is_empty())
+                    .unwrap_or(true)
+                {
+                    return false;
+                }
+            } else if token == "actions" || token == "actionitems" {
+                if values
+                    .get(10)
                     .map(|value| value.trim().is_empty())
                     .unwrap_or(true)
                 {
@@ -965,7 +1072,7 @@ impl ToolSpec {
 
     fn date_value<'a>(&self, values: &'a [String]) -> Option<&'a str> {
         match self.kind {
-            ToolKind::OneOnOne => values.get(1).map(|value| value.as_str()),
+            ToolKind::OneOnOne => values.get(5).map(|value| value.as_str()),
             ToolKind::Decision => values.get(3).map(|value| value.as_str()),
             ToolKind::Delegation => None,
         }
@@ -1073,14 +1180,20 @@ pub fn load_dashboard_snapshot(kind: ToolKind) -> Result<DashboardSnapshot, Box<
         ToolKind::OneOnOne => (
             records
                 .iter()
-                .filter(|record| !value_at(record, 1).trim().is_empty())
+                .filter(|record| !value_at(record, 5).trim().is_empty())
                 .count(),
             records
                 .iter()
-                .filter(|record| !value_at(record, 3).trim().is_empty())
+                .filter(|record| {
+                    let values = spec.normalize_values(&record.values);
+                    !values
+                        .get(10)
+                        .map(|value| value.trim().is_empty())
+                        .unwrap_or(true)
+                })
                 .count(),
             "scheduled",
-            "follow-ups",
+            "action items",
         ),
         ToolKind::Delegation => (
             records
@@ -1211,6 +1324,60 @@ fn parse_linked_ids(value: &str) -> Vec<i32> {
     }
 
     ids
+}
+
+fn parse_action_items(value: &str) -> Vec<String> {
+    value
+        .split('|')
+        .flat_map(|segment| segment.split('\n'))
+        .map(|item| item.trim().trim_start_matches('-').trim())
+        .filter(|item| !item.is_empty())
+        .map(|item| item.to_string())
+        .collect()
+}
+
+fn append_delegations_from_sync(
+    person: &str,
+    team: &str,
+    purpose: &str,
+    meeting_type: &str,
+    actions: &[String],
+) -> Result<(), Box<dyn Error>> {
+    let store_path = store_path_for(ToolKind::Delegation);
+    if let Some(parent) = store_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let mut records = load_records(&store_path)?;
+    let context = format!(
+        "{} | {} | {}",
+        blank_dash(team),
+        blank_dash(purpose),
+        blank_dash(meeting_type)
+    );
+
+    for action in actions {
+        records.insert(
+            0,
+            ToolRecord {
+                id: next_id(&records),
+                values: vec![
+                    action.clone(),
+                    person.to_string(),
+                    "Delegated".to_string(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                    context.clone(),
+                ],
+                updated_at: timestamp(),
+            },
+        );
+    }
+
+    let content = serde_json::to_string_pretty(&records)?;
+    fs::write(store_path, content)?;
+    Ok(())
 }
 
 fn cadence_duration(value: &str) -> Duration {

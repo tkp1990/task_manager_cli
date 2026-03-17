@@ -624,7 +624,10 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
                     ),
                 ]),
                 Spans::from(vec![
-                    Span::styled("Follow-Ups: ", ui_style::muted_style()),
+                    Span::styled(
+                        format!("{}: ", title_case_label(dashboard.one_on_ones.stat_b_label)),
+                        ui_style::muted_style(),
+                    ),
                     Span::raw(dashboard.one_on_ones.stat_b_value.to_string()),
                 ]),
                 Spans::from(Span::styled(
