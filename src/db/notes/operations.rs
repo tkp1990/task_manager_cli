@@ -74,4 +74,13 @@ impl DbOperations {
 
         Ok(note::table.find(note_id).get_result::<Note>(&mut conn)?)
     }
+
+    pub fn find_note(&self, note_id: i32) -> Result<Option<Note>, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
+
+        Ok(note::table
+            .find(note_id)
+            .first::<Note>(&mut conn)
+            .optional()?)
+    }
 }

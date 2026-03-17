@@ -18,6 +18,7 @@ struct NotesSessionState {
     current_dir: Option<PathBuf>,
     file_search_query: String,
     selected_file_path: Option<PathBuf>,
+    focused_note_id: Option<i32>,
 }
 
 static NOTES_SESSION_STATE: OnceLock<Mutex<NotesSessionState>> = OnceLock::new();
@@ -52,7 +53,8 @@ pub fn run_notes_app(
     info!(log, "DB_PATH_STR: {}", db_path_str);
 
     let mut app = app::App::new_with_notes_root(&db_path_str, notes_root)?;
-    if let Ok(state) = notes_session_state().lock() {
+    let mut focused_note_id = None;
+    if let Ok(mut state) = notes_session_state().lock() {
         app.note_filter = state.note_filter.clone();
         app.ensure_selected_visible();
         if let Some(active_view) = state.active_view {
@@ -72,6 +74,10 @@ pub fn run_notes_app(
                 app.select_file_entry_path(path);
             }
         }
+        focused_note_id = state.focused_note_id.take();
+    }
+    if let Some(note_id) = focused_note_id {
+        let _ = app.focus_note_by_id(note_id)?;
     }
 
     let result = ui::run(&mut app, terminal);
@@ -83,6 +89,16 @@ pub fn run_notes_app(
         state.selected_file_path = app.selected_file_entry().map(|entry| entry.path.clone());
     }
     result
+}
+
+pub fn run_notes_app_with_focus(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    note_id: i32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Ok(mut state) = notes_session_state().lock() {
+        state.focused_note_id = Some(note_id);
+    }
+    run_notes_app(terminal)
 }
 
 #[cfg(test)]
@@ -100,9 +116,11 @@ mod tests {
             current_dir: Some(std::path::PathBuf::from(".notes/files")),
             file_search_query: "roadmap".to_string(),
             selected_file_path: Some(std::path::PathBuf::from(".notes/files/roadmap.md")),
+            focused_note_id: Some(7),
         };
 
         assert_eq!(state.note_filter, "title:alpha");
         assert_eq!(state.file_search_query, "roadmap");
+        assert_eq!(state.focused_note_id, Some(7));
     }
 }

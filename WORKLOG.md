@@ -29,7 +29,7 @@ This file tracks in-progress changes so the session can resume cleanly after int
 - Added preset-related app support and wiring in task manager and notes app modules.
 
 ### In Progress
-- Added EM-oriented tools; next work is feature depth and UX refinement inside those tools.
+- EM tools are moving from CRUD scaffolds toward real day-to-day workflows.
 
 ### Last Known Resume Point
 - Task manager popup styling pass is applied.
@@ -38,7 +38,8 @@ This file tracks in-progress changes so the session can resume cleanly after int
 - Real-terminal validation at 80 columns is complete.
 - Homepage density pass is now applied.
 - Three new EM tools are now scaffolded and wired into the launcher.
-- Next step is to deepen those tools with richer workflows, filters, and linked context.
+- Shared filtering and quick-action workflows are now added to the leadership tools.
+- Next step is to deepen each tool further with tool-specific automation, templates, and cross-links.
 
 ### Verification Status
 - `cargo check` was attempted earlier but was blocked by sandbox restrictions at that time.
@@ -105,6 +106,108 @@ This file tracks in-progress changes so the session can resume cleanly after int
   - implemented JSON persistence, dashboard snapshots, add/edit/delete flows, and tool-specific status cycling for delegation and decision tools
   - validated live launch and screen rendering for the new `1:1 Manager`
   - `cargo check` passes cleanly after the new-tool integration
+- EM tools feature-depth pass:
+  - added shared filter mode and filtered-record navigation in:
+    - [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs)
+    - [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs)
+  - added filter tokens/workflows:
+    - `owner:`
+    - `person:`
+    - `status:`
+    - `date:`
+    - `due:`
+    - `overdue`
+    - `followups`
+  - added tool-specific quick actions:
+    - `1:1 Manager`: `n` pushes the next 1:1 date forward by one week
+    - `Delegation Tracker`: `t` cycles status
+    - `Decision Log`: `t` cycles status
+  - added delegation overdue detection to dashboard stats
+  - validated the richer tool screen in a live terminal run
+  - `cargo check` still passes cleanly after the workflow upgrade
+- 1:1 Manager depth pass:
+  - expanded 1:1 records in [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs) with:
+    - cadence
+    - last-meeting date
+    - backward-compatible migration for older 5-field saved records
+  - changed the `n` quick action to advance the next 1:1 by the selected cadence instead of a fixed week
+  - added a `m` complete-meeting action that:
+    - stamps the current meeting into `Last 1:1`
+    - advances `Next 1:1`
+    - rolls agenda items into follow-ups
+    - clears the active agenda field
+  - enriched the 1:1 detail pane and list summaries with cadence-aware scheduling context
+  - updated filter guidance in [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs) so each leadership tool shows relevant tokens
+  - `cargo check` passes cleanly after the 1:1 workflow upgrade
+- Delegation Tracker depth pass:
+  - expanded delegation records in [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs) with:
+    - `Next Follow-Up`
+    - `Last Reminder`
+    - backward-compatible migration for older 5-field saved records
+  - added a `r` quick action to log a reminder, stamp `Last Reminder`, and advance the next follow-up date
+  - added delegation urgency logic so records can surface as:
+    - `On track`
+    - `Follow-up due`
+    - `Overdue`
+    - `Closed`
+  - updated delegation detail rendering, list summaries, filter tokens, and command hints in [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs)
+  - changed delegation dashboard stats to count `follow-up due` items instead of only overdue items
+  - added urgency-aware list styling for delegation rows:
+    - overdue items render in danger styling
+    - follow-up due items render in warning styling
+  - `cargo check` passes cleanly after the delegation workflow upgrade
+- Decision Log depth pass:
+  - expanded decision records in [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs) with:
+    - `Tags`
+    - `Linked Notes`
+    - `Linked Tasks`
+    - `Review Date`
+    - backward-compatible migration for older 6-field saved records
+  - added a `v` quick action to move the decision review date forward by 14 days
+  - added decision review status logic so records can surface as:
+    - `No review scheduled`
+    - `Scheduled`
+    - `Review due`
+  - updated decision detail rendering and list summaries with tags, cross-links, and review timing
+  - added richer filter tokens in [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs):
+    - `tag:`
+    - `note:`
+    - `task:`
+    - `review`
+  - added warning styling for decisions that are due for review
+  - changed decision dashboard stats to count `review due` items instead of only `proposed`
+  - `cargo check` passes cleanly after the decision workflow upgrade
+- Leadership tools terminal-polish pass:
+  - validated `1:1 Manager`, `Delegation Tracker`, `Decision Log`, and homepage snapshot rendering in a live PTY session
+  - fixed add-form editing in [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs) so prefilled default values are replaced on first keystroke instead of appended
+  - fixed the redundant normal-mode command rows in [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs) for `1:1 Manager`
+  - aligned homepage leadership snapshot labels in [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) with the current tool metrics:
+    - `follow-up due`
+    - `review due`
+  - shortened the Decision Log launcher copy slightly in [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) to fit terminal width more cleanly
+  - removed temporary validation data created during the live PTY pass
+  - `cargo check` passes cleanly after the polish fixes
+- Leadership cross-link pass:
+  - added task and note lookup support in:
+    - [src/db/task_manager/operations.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/db/task_manager/operations.rs)
+    - [src/db/notes/operations.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/db/notes/operations.rs)
+  - added focus-by-id entry points for linked navigation in:
+    - [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs)
+    - [src/task_manager/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/mod.rs)
+    - [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs)
+    - [src/notes/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/mod.rs)
+  - expanded Decision Log link handling in [src/leadership_tools/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/app.rs):
+    - parse linked task ids
+    - parse linked note ids
+    - resolve linked records against the task and notes databases
+    - surface resolved link counts in the detail pane
+  - added a linked-record popup and cross-app handoff in [src/leadership_tools/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/leadership_tools/ui.rs):
+    - `o` opens linked records from the selected decision
+    - popup shows resolved title and summary for each task/note
+    - `Enter` opens the linked task or note app with the target record focused
+  - validated the task handoff in a live PTY session by opening a linked task from Decision Log into Task Manager
+  - removed the temporary decision fixture used for validation
+  - `cargo check` passes cleanly after the cross-link workflow upgrade
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:

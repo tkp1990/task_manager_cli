@@ -352,6 +352,28 @@ impl App {
         self.load_notes()
     }
 
+    pub fn focus_note_by_id(&mut self, note_id: i32) -> Result<bool, Box<dyn Error>> {
+        let Some(note) = self.db_ops.find_note(note_id)? else {
+            return Ok(false);
+        };
+
+        self.active_view = NotesView::Database;
+        self.note_filter.clear();
+        self.load_notes()?;
+
+        if let Some(index) = self
+            .notes
+            .iter()
+            .position(|candidate| candidate.id == note.id)
+        {
+            self.selected = index;
+            self.ensure_selected_visible();
+        }
+
+        self.add_log("INFO", &format!("Focused note id: {}", note_id));
+        Ok(true)
+    }
+
     /// Update an existing note.
     pub fn update_note(
         &mut self,

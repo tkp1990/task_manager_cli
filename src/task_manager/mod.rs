@@ -13,6 +13,7 @@ use tui::Terminal;
 struct TaskManagerSessionState {
     task_filter: String,
     special_task_filter: String,
+    focused_task_id: Option<i32>,
 }
 
 static TASK_MANAGER_SESSION_STATE: OnceLock<Mutex<TaskManagerSessionState>> = OnceLock::new();
@@ -46,10 +47,15 @@ pub fn run_task_manager(
     info!(log, "DB_PATH_STR: {}", db_path_str);
 
     let mut app = app::App::new(&db_path_str)?;
-    if let Ok(state) = task_manager_session_state().lock() {
+    let mut focused_task_id = None;
+    if let Ok(mut state) = task_manager_session_state().lock() {
         app.task_filter = state.task_filter.clone();
         app.special_task_filter = state.special_task_filter.clone();
+        focused_task_id = state.focused_task_id.take();
         app.ensure_selected_visible();
+    }
+    if let Some(task_id) = focused_task_id {
+        let _ = app.focus_task_by_id(task_id)?;
     }
 
     let result = ui::run(&mut app, terminal);
@@ -58,6 +64,16 @@ pub fn run_task_manager(
         state.special_task_filter = app.special_task_filter.clone();
     }
     result
+}
+
+pub fn run_task_manager_with_focus(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    task_id: i32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Ok(mut state) = task_manager_session_state().lock() {
+        state.focused_task_id = Some(task_id);
+    }
+    run_task_manager(terminal)
 }
 
 #[cfg(test)]
@@ -72,9 +88,11 @@ mod tests {
         *state = TaskManagerSessionState {
             task_filter: "status:done".to_string(),
             special_task_filter: "fav:true".to_string(),
+            focused_task_id: Some(42),
         };
 
         assert_eq!(state.task_filter, "status:done");
         assert_eq!(state.special_task_filter, "fav:true");
+        assert_eq!(state.focused_task_id, Some(42));
     }
 }

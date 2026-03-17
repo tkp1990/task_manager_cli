@@ -198,4 +198,13 @@ impl DbOperations {
 
         Ok(diesel::delete(task::table.find(task_id)).execute(&mut conn)?)
     }
+
+    pub fn find_task(&self, task_id: i32) -> Result<Option<Task>, Box<dyn Error>> {
+        let mut conn = self.get_conn()?;
+
+        Ok(task::table
+            .find(task_id)
+            .first::<Task>(&mut conn)
+            .optional()?)
+    }
 }

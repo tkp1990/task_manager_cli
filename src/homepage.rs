@@ -47,7 +47,7 @@ impl AppTool {
             AppTool::Notes => "Files, markdown, links.",
             AppTool::OneOnOneManager => "People, agenda, follow-ups.",
             AppTool::DelegationTracker => "Owners, status, due dates.",
-            AppTool::DecisionLog => "Decisions, rationale, impact.",
+            AppTool::DecisionLog => "Decisions, rationale, links.",
         }
     }
 
@@ -651,7 +651,10 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
                     ),
                 ]),
                 Spans::from(vec![
-                    Span::styled("Blocked: ", ui_style::muted_style()),
+                    Span::styled(
+                        format!("{}: ", title_case_label(dashboard.delegations.stat_b_label)),
+                        ui_style::muted_style(),
+                    ),
                     Span::raw(dashboard.delegations.stat_b_value.to_string()),
                 ]),
                 Spans::from(Span::styled(
@@ -678,7 +681,10 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
                     ),
                 ]),
                 Spans::from(vec![
-                    Span::styled("Proposed: ", ui_style::muted_style()),
+                    Span::styled(
+                        format!("{}: ", title_case_label(dashboard.decisions.stat_b_label)),
+                        ui_style::muted_style(),
+                    ),
                     Span::raw(dashboard.decisions.stat_b_value.to_string()),
                 ]),
                 Spans::from(Span::styled(
@@ -694,6 +700,25 @@ fn draw_selected_tool_summary<B: tui::backend::Backend>(
         .block(ui_style::surface_block(title, accent))
         .wrap(Wrap { trim: false });
     f.render_widget(summary, area);
+}
+
+fn title_case_label(label: &str) -> String {
+    label
+        .split([' ', '-'])
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                Some(first) => {
+                    let mut word = first.to_uppercase().collect::<String>();
+                    word.push_str(chars.as_str());
+                    word
+                }
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 fn draw_recent_panel<B: tui::backend::Backend>(

@@ -251,6 +251,33 @@ impl App {
         Ok(())
     }
 
+    pub fn focus_task_by_id(&mut self, task_id: i32) -> Result<bool, Box<dyn Error>> {
+        let Some(task) = self.db_ops.find_task(task_id)? else {
+            return Ok(false);
+        };
+
+        self.task_filter.clear();
+        self.selected_topic = self
+            .topics
+            .iter()
+            .position(|topic| topic.id == task.topic_id)
+            .or_else(|| self.topics.iter().position(|topic| topic.name == "Default"))
+            .unwrap_or(0);
+        self.load_tasks()?;
+
+        if let Some(index) = self
+            .tasks
+            .iter()
+            .position(|candidate| candidate.id == task_id)
+        {
+            self.selected = index;
+            self.ensure_selected_visible();
+        }
+
+        self.add_log("INFO", &format!("Focused task id: {}", task_id));
+        Ok(true)
+    }
+
     /// Toggle the completion status of the currently selected task.
     pub fn toggle_task(&mut self) -> Result<(), Box<dyn Error>> {
         if let Some(task) = self.tasks.get(self.selected) {
