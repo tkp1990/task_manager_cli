@@ -244,6 +244,79 @@ This file tracks in-progress changes so the session can resume cleanly after int
     - `app.rs` now focuses on app behavior and tool rules
     - `ui.rs` now focuses on run-loop orchestration
   - `cargo check` passes cleanly after the module split
+- Notes app structural refactor:
+  - split the oversized notes model/support layer under [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs) into focused submodules:
+    - [src/notes/app/types.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/types.rs) for enums, structs, and `App` state
+    - [src/notes/app/helpers.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/helpers.rs) for markdown preview, metadata parsing, file shortcut persistence, template loading, path-copy helpers, fuzzy matching, and editor/path utilities
+  - kept the main `impl App` in [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs) to limit this pass to structural cleanup only
+  - preserved the existing public surface by re-exporting notes types and `format_file_size` from the root app module so [src/notes/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/mod.rs) and [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs) continue to compile unchanged
+  - reduced [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs) from 3234 lines to 2658 lines in this pass
+  - `cargo check` passes cleanly after the notes module split
+  - next likely split is inside the remaining `impl App`: file browser/editor workflows, note CRUD/filtering, and preset/history logic
+- Notes app behavior refactor:
+  - split the remaining `impl App` behavior across focused modules under [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs):
+    - [src/notes/app/core.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/core.rs) for construction, app bootstrapping, logs, command palette state, and view switching
+    - [src/notes/app/notes.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/notes.rs) for note CRUD, note filtering, selection movement, and note form flows
+    - [src/notes/app/files.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/files.rs) for file browser navigation, search, editor workflows, templates, shortcuts, related links, and file operations
+    - [src/notes/app/presets.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app/presets.rs) for note preset dialogs and persistence
+  - left [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs) as the root/re-export/test module instead of a behavior catch-all
+  - reduced [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs) from 2658 lines to 843 lines in this pass
+  - kept the external API stable so existing callers in [src/notes/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/mod.rs) and [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs) did not need contract changes
+  - fixed one shared-helper visibility edge (`filter_tokens`) discovered during compile after moving file search into its own module
+  - `cargo check` passes cleanly after the deeper notes app split
+  - next likely refactor target is [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs), which is now the biggest remaining single behavior file in the app layer
+- Task manager module refactor:
+  - split [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs) into focused submodules under `src/task_manager/app/`:
+    - [src/task_manager/app/types.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/types.rs) for `InputMode` and `App` state
+    - [src/task_manager/app/helpers.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/helpers.rs) for palette history persistence
+    - [src/task_manager/app/core.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/core.rs) for app construction, topic/task bootstrapping, logs, focus handoff, and command palette state
+    - [src/task_manager/app/tasks.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/tasks.rs) for regular task CRUD, topic operations, and task form flows
+    - [src/task_manager/app/filters.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/filters.rs) for regular and special task filtering plus preset persistence/workflows
+    - [src/task_manager/app/special.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app/special.rs) for favourites/completed task loading and special-popup actions
+  - left [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs) as the root re-export/test module instead of a single 1200+ line behavior file
+  - reduced [src/task_manager/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/app.rs) from 1270 lines to 289 lines in this pass
+  - kept the external app API stable so [src/task_manager/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/mod.rs) and [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs) continue to compile without contract changes
+  - fixed one helper visibility issue for palette persistence during compile after the split
+  - `cargo check` passes cleanly after the task manager module split
+  - next likely cleanup targets are [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) or [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs), depending on whether you want to prioritize architecture or UI event/render separation next
+- Task manager UI refactor:
+  - split [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs) into focused UI submodules:
+    - [src/task_manager/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/events.rs) for palette command metadata, key handling, mode transitions, and action execution
+    - [src/task_manager/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui/draw.rs) for the main screen render path, popups, help text, and task/special-task list presentation
+  - left [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs) as the run-loop entrypoint only
+  - reduced [src/task_manager/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/ui.rs) from 1737 lines to 45 lines in this pass
+  - preserved existing runtime behavior by keeping the same terminal contract used by [src/task_manager/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/task_manager/mod.rs)
+  - fixed one palette-command visibility issue during compile after moving draw code into a sibling module
+  - `cargo check` passes cleanly after the task manager UI split
+  - next likely architecture target is [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs), which remains one of the larger orchestration/render files in the repo
+- Homepage module refactor:
+  - split [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) into focused submodules under `src/homepage/`:
+    - [src/homepage/types.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage/types.rs) for `AppTool`, dashboard structs, and homepage input actions
+    - [src/homepage/data.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage/data.rs) for dashboard loading, DB/file aggregation, file scanning, and compact text helpers
+    - [src/homepage/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage/draw.rs) for launcher rendering, dashboard panels, summaries, and footer/header drawing
+  - left [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) as the homepage run loop and test surface
+  - reduced [src/homepage.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/homepage.rs) from 1025 lines to 124 lines in this pass
+  - preserved the public entrypoint used by [src/main.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/main.rs) so app startup behavior stays unchanged
+  - fixed one module-import boundary issue after moving dashboard structs into `types.rs`
+  - `cargo check` passes cleanly after the homepage split
+  - next likely cleanup target is broader consistency polish or a similar decomposition pass on any remaining large UI/render files if you want to keep pushing architecture
+- Notes UI refactor:
+  - split [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs) into focused UI submodules:
+    - [src/notes/ui/events.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/events.rs) for palette command metadata, key handling, mode transitions, and action/error handling
+    - [src/notes/ui/draw.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui/draw.rs) for the main notes/file render path, popups, help content, browser panels, and inline editor presentation
+  - left [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs) as the run-loop entrypoint only
+  - reduced [src/notes/ui.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/ui.rs) from 2222 lines to 41 lines in this pass
+  - preserved the existing generic terminal entrypoint used by [src/notes/mod.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/mod.rs)
+  - fixed two syntax/visibility issues during compile after moving the command palette and command-bar code into sibling modules
+  - `cargo check` passes cleanly after the notes UI split
+  - next likely step is a live-terminal regression sweep, since the major app/UI concentration points are now decomposed and the remaining work is mostly consistency validation
+- Notes app test fix:
+  - fixed a test-only access error in [src/notes/app.rs](/Users/kenneth.thomas/Workspace/task_manager_cli/src/notes/app.rs) introduced by the app refactor
+  - updated the affected test to use the public `select_file_entry_path` wrapper instead of the private internal helper `select_entry_path`
+  - verification:
+    - `cargo check` passes cleanly
+    - `cargo test notes::app -- --nocapture` passes with 33 notes app tests green
+  - next likely step remains a live-terminal regression sweep across homepage, task manager, notes, and leadership tools
 
 ### Working Notes
 - The repo currently has user/in-progress modifications in:
